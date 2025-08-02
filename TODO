@@ -1,0 +1,11 @@
+-> finish testing (implement and test)             = [DONE]
+-> test resume                                     = [DONE]
+-> test loss functions                             = [DONE]
+-> test backbones                                  = [DONE]
+-> add rellis-3d dataloader (implement and test)   =
+-> add rugd dataloader (implement and test)        =
+-> add inference time metric                       = [DONE]
+-> add lovasz_softmax loss function                = [DONE]
+-> add albumentation augmentation                  = [DONE]
+-> add boundary_loss function                      = [DONE]
+-> add hausdorff_dt loss function                  = [DONE]
