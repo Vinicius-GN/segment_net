@@ -14,12 +14,11 @@ It supports multiple attention mechanisms, decoder designs, loss functions, and 
   <a href="#3-architecture-details-">Architecture Details</a> ·
   <a href="#4-datasets-">Datasets</a> ·
   <a href="#5-installation-and-usage-">Installation and Usage</a> ·
-  <a href="#6-parameters-table-">Parameters Table</a> ·
-  <a href="#7-results-and-comparison-">Results and Comparison</a> ·
+  <a href="#6-model-attributes-overview-">Model Attributes Overview</a> ·
+  <a href="#7-results-">Results</a> ·
   <a href="#8-contribution-">Contribution</a> ·
   <a href="#9-license-">License</a>
 </p>
-
 
 <p align="center">
   <img src="images/model.svg" alt="Architecture Diagram" width="600">
@@ -49,6 +48,8 @@ In off-road scenarios, perception systems must deal with:
 
 Transformers have emerged as powerful alternatives to traditional CNNs, offering better global context modeling and higher segmentation accuracy. However, their behavior in off-road segmentation tasks is still underexplored.
 
+To validate the effectiveness of the proposed framework and architectures in real-world off-road scenarios, we conducted extensive experiments using the **RELLIS-3D dataset**. Quantitative and qualitative results, including per-class performance metrics and visual segmentation outputs, are presented in the *Results* section below.
+
 ---
 
 ### 🎯 Objectives of This Work
@@ -58,6 +59,7 @@ Transformers have emerged as powerful alternatives to traditional CNNs, offering
 🔹 Allow easy switching between **backbones, decoders, losses, and attention types**.  
 🔹 Provide a **reproducible baseline** using the RELLIS-3D dataset.  
 🔹 Facilitate **benchmarking and experimentation** for off-road autonomous navigation.  
+🔹 Report and analyze experimental results obtained using the **RELLIS-3D dataset**, providing both quantitative benchmarks and qualitative visual comparisons.
 
 ---
 
@@ -179,9 +181,22 @@ This segmentation framework offers built-in support for several standard public 
 
 ## 5. Installation and Usage ⚙️
 
+### 📋 Requirements
+
+This project requires a **Python 3.8** environment with **PyTorch 2.4.1** and **CUDA 12.1**. All core dependencies and libraries are installed via a single automated setup script. The main packages used include:
+
+* `torch==2.4.1` · `torchvision==0.19.1` · `torchaudio==2.4.1`
+* `albumentations`, `transformers`, `monai`, `timm`
+* `OpenCV`, `Matplotlib`, `Scikit-learn`, `Plotly`, `Dash`
+* `PyTorch Geometric` (with CUDA wheels)
+
+Ensure you have **Anaconda/Miniconda** installed and a compatible NVIDIA GPU with CUDA 12.1 support for full functionality.
+
+---
+
 ### 📦 Environment Setup (via shell script)
 
-To automatically install the required packages and create the conda environment:
+To automatically install the required packages and create the environment:
 
 ```bash
 bash env/create_env.sh
@@ -189,10 +204,10 @@ bash env/create_env.sh
 
 This will:
 
-* Create a `pytorch-env` environment with **Python 3.8.20**
-* Install **PyTorch 2.4.1**, **TorchVision**, **TorchAudio**, with **CUDA 12.1**
-* Install key libraries (Albumentations, OpenCV, MONAI, Transformers, etc.)
-* Install **PyTorch Geometric** and CUDA-compatible wheels
+✅ Create a conda environment named **`pytorch-env`**  
+✅ Install **Python 3.8.20**, **PyTorch 2.4.1**, **TorchVision**, **TorchAudio** (CUDA 12.1)  
+✅ Install required libraries via `pip` (Albumentations, MONAI, Transformers, etc.)  
+✅ Install **PyTorch Geometric** with precompiled CUDA wheels  
 
 Then activate the environment:
 
@@ -208,41 +223,36 @@ conda activate pytorch-env
    Use one of the `.ini` files in the `cfg/` folder (e.g., `rellis3d_dev.ini`).
 
 2. **Edit configuration**
-   Open the file and update it to accomplish your desired setup:
+   Update the following parameters inside the file:
 
-   * `type` em [BACKBONE] (e.g., segformerb0)
+   * `type` (backbone type, e.g., `segformerb0`)
    * `mode` (`train`, `resume`, or `test`)
-   * `dataset` (e.g., `rellis3d`, `rugd`, `bdd100k`, etc.)
-   * Optional: learning rate, loss function, attention module, batch size, etc.
+   * `dataset` (e.g., `rellis3d`, `rugd`, `bdd100k`)
+   * Optionally: loss function, learning rate, attention, batch size, etc.
 
 #### ▶ Training
 
-To train any network, after fulfilling the project's requirements and editing the configuration file, you just need to run the following shell command
+```bash
+python run.py --cfg cfg/rellis3d_dev.ini
+```
+
+Ensure `mode = train` in the `.ini` file.
+
+#### ✅ Resume Training
 
 ```bash
 python run.py --cfg cfg/rellis3d_dev.ini
 ```
 
-Ensure the `.ini` file has `mode = train`.
-
-#### ✅ Resume
-
-In case you stop your network's training and need to recover it where it stopped, just run:
-```bash
-python run.py --cfg cfg/rellis3d_dev.ini
-```
-
-Ensure the `.ini` file has `mode = resume`.
+Ensure `mode = resume` to continue from the last checkpoint.
 
 #### 🧪 Testing
 
-For testing any supported network, again, just run:
-
 ```bash
 python run.py --cfg cfg/rellis3d_dev.ini
 ```
 
-Ensure the `.ini` file has `mode = test`.
+Ensure `mode = test` in the configuration file.
 
 ---
 
@@ -264,7 +274,7 @@ Before diving into the performance results, we provide an overview of each model
 
 ### 7.1 Quantitative Results 📊
 
-Below are the quantitative benchmarks collected across all tested models using our unified framework in Rellis3D datasey. We report per-class IoU scores and overall mean IoU, as well as resource usage metrics to highlight architecture trade‑offs in speed and size.
+Below are the quantitative benchmarks collected across all tested models using our unified framework in Rellis3D dataset. We report per-class IoU scores and overall mean IoU, as well as resource usage metrics to highlight architecture trade‑offs in speed and size.
 
 | **Models**          | *sky* | *grass* | *tree* | *bush* | *concrete* | *mud* | *person* | *puddle* | *rubble* | *barrier* | *log* | *fence* | *vehicle* | *object* | *pole* | *water* | *asphalt* | *building* | **mean** |
 |--------------------|:-----:|:------:|:-----:|:-----:|:---------:|:----:|:-------:|:--------:|:--------:|:-------:|:---:|:--------:|:--------:|:--------:|:-----:|:------:|:--------:|:----------:|:--------:|
