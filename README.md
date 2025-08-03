@@ -268,8 +268,6 @@ Before diving into the performance results, we provide an overview of each model
 
 ---
 
----
-
 ## 7. Results 🚀
 
 ### 7.1 Quantitative Results 📊
