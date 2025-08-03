@@ -264,7 +264,7 @@ Before diving into the performance results, we provide an overview of each model
 
 ### 7.1 Quantitative Results 📊
 
-Below are the quantitative benchmarks collected across all tested models using our unified framework. We report per-class IoU scores and overall mean IoU, as well as resource usage metrics to highlight architecture trade‑offs in speed and size.
+Below are the quantitative benchmarks collected across all tested models using our unified framework in Rellis3D datasey. We report per-class IoU scores and overall mean IoU, as well as resource usage metrics to highlight architecture trade‑offs in speed and size.
 
 | **Models**          | *sky* | *grass* | *tree* | *bush* | *concrete* | *mud* | *person* | *puddle* | *rubble* | *barrier* | *log* | *fence* | *vehicle* | *object* | *pole* | *water* | *asphalt* | *building* | **mean** |
 |--------------------|:-----:|:------:|:-----:|:-----:|:---------:|:----:|:-------:|:--------:|:--------:|:-------:|:---:|:--------:|:--------:|:--------:|:-----:|:------:|:--------:|:----------:|:--------:|
