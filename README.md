@@ -305,7 +305,3 @@ If you have suggestions, feature requests, or improvements, feel free to:
 
 This project is licensed under the **MIT License**.
 See the [LICENSE](LICENSE) file for details.
-
----
-
-Se quiser, posso agora inserir **tabelas reais de resultados** diretamente do seu artigo. É só me enviar o PDF do artigo ou confirmar que posso extraí-los se já estiver no ambiente.
