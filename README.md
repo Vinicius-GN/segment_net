@@ -29,7 +29,7 @@ It supports multiple attention mechanisms, decoder designs, loss functions, and 
 [![Python](https://img.shields.io/badge/python-3.8-blue)](https://www.python.org/)
 [![CUDA](https://img.shields.io/badge/cuda-12.1-green)](https://developer.nvidia.com/cuda-toolkit)
 [![Torch](https://img.shields.io/badge/pytorch-2.4.1-orange)](https://pytorch.org/)
-[![License](https://img.shields.io/github/license/iag0g0mes/segment_net.svg)](LICENSE)
+[![License](https://img.shields.io/github/license/Vinicius-GN/segment_net.svg)](LICENSE)
 
 </div>
 
@@ -289,16 +289,19 @@ Ensure `mode = test` in the configuration file.
 | **EdgeNeXt**        |        0.955       |        0.878       |        0.743       |  0.732 **\[best]** |        0.762       |        0.311       |        0.582       |        0.708       |        0.373       |  0.229 **\[best]** | 0.000 |        0.203       |        0.212       |        0.127       |        0.074       |        0.000       |        0.002       |        0.016       |        0.384       |        91.01       |
 
 ---
+### 7.2 Qualitative Results 🌟
 
-## 7.2 Qualitative Results 🌟
+<div align="justify">
+Visual inspection of segmentation outputs is essential for understanding how models interpret complex scenes, handle object boundaries, and manage class ambiguity, particularly in challenging and unstructured environments.
 
-Visual inspection of segmentation outputs is crucial to understanding how each model handles complex scenes, boundaries, and class ambiguity—especially in challenging terrain.
+The mosaic below presents representative RGB inputs, ground truth masks, and the predictions from the three top performing models: **MobileViT**, **MaxViT**, and **EdgeNeXt**. Placing these outputs side by side allows a direct comparison of how each architecture addresses fine grained details, preserves small objects, and avoids common segmentation pitfalls.
 
-<div align="justify"> The mosaic below shows representative <strong>input frames</strong>, <strong>ground-truth masks</strong>, and <strong>model predictions</strong> side by side for a range of architectural backbones. This qualitative comparison highlights typical failure modes: boundary misclassifications, small-object omission, and visual artifacts. Mosaic-style layouts are common in semantic segmentation literature, such as those exploring textured mosaic analysis, serving as effective summary visuals for multi-class environments. 
+This visual comparison reveals typical failure modes such as boundary misalignment, omission of small or thin structures, and texture related artifacts, while also illustrating each model’s strengths. Mosaic style layouts are widely used in semantic segmentation literature as an effective way to summarize qualitative performance across multiple classes and scene types.
 </div>
+<br>
 
 <p align="center">
-  <img src="images/results/mosaic.png" alt="Qualitative segmentation results mosaic" width="800">
+  <img src="images/segmentation_result.png" alt="Qualitative segmentation results mosaic" width="800">
 </p>
 
 ---
@@ -308,8 +311,8 @@ Visual inspection of segmentation outputs is crucial to understanding how each m
 Contributions are welcome!
 If you have suggestions, feature requests, or improvements, feel free to:
 
-* Open an [Issue](https://github.com/your-repo/issues)
-* Submit a [Pull Request](https://github.com/your-repo/pulls)
+* Open an [Issue](https://github.com/Vinicius-GN/segment_net/issues)
+* Submit a [Pull Request](https://github.com/Vinicius-GN/segment_net/pulls)
 
 ---
 
