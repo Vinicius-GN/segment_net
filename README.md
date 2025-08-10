@@ -72,7 +72,8 @@ SEGMENT_NET/
 │
 ├── cfg/              # Configuration files (.ini) for training/testing
 ├── env/              # Environment setup scripts
-├── images/           # Architecture diagrams
+├── experiments       # Configuration files used for the article's experiments
+├── images/           # Architecture diagrams, moisaic image and confusion matrices files
 ├── logs/             # Training logs
 ├── params/           # Model parameters, checkpoints, or derived configs
 ├── utils/            # Helper functions and support scripts
@@ -80,7 +81,9 @@ SEGMENT_NET/
 ├── class_weights.py  # Class balancing script
 ├── run.py            # Main pipeline script
 ├── run_all.sh        # Shell script to enable automatic training sequences
+├── visualize_modelANDconfusion_matrices.ipynb # Jupyter notebook to allow confusion matrices plots and inference visualization and saving on files.
 ├── .gitignore
+├── LICENSE
 └── README.md        
 ```
 
@@ -303,6 +306,43 @@ This visual comparison reveals typical failure modes such as boundary misalignme
 <p align="center">
   <img src="images/segmentation_result.png" alt="Qualitative segmentation results mosaic" width="800">
 </p>
+
+### 7.3 Confusion Matrices 🔁
+
+<div align="justify">
+While global metrics such as mIoU and overall accuracy provide a high-level view of model performance, confusion matrices reveal a deeper layer of understanding by showing how each class is predicted relative to the ground truth.  
+For semantic segmentation in complex off-road environments, class-specific error analysis is particularly valuable, as datasets often suffer from severe class imbalance, visual ambiguity, and small or thin object instances.  
+
+Below are the row-normalized confusion matrices for the three best-performing architectures (**MobileViT**, **MaxViT**, and **EdgeNeXt**) and the worst-performing model (**SAM 2**).
+The values are normalized per true class (row), meaning that each row sums to 1. This allows direct interpretation of recall rates: darker diagonal cells indicate higher correct predictions for that class, while off-diagonal cells show confusion with other classes.
+
+Arranging them in a **2×2 mosaic** enables an immediate visual comparison of how the strongest and weakest models differ in their ability to recognize specific classes under the same test set conditions.
+
+</div>
+<br>
+
+<table align="center">
+  <tr>
+    <td align="center" width="50%">
+      <img src="images/confusion_matrices/mobilevit-1.png" alt="MobileViT Confusion Matrix" width="90%"><br><strong>MobileViT</strong>
+    </td>
+    <td align="center" width="50%">
+      <img src="images/confusion_matrices/maxxvit-1.png" alt="MaxViT Confusion Matrix" width="90%"><br><strong>MaxViT</strong>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" width="50%">
+      <img src="images/confusion_matrices/edgenext-1.png" alt="EdgeNeXt Confusion Matrix" width="90%"><br><strong>EdgeNeXt</strong>
+    </td>
+    <td align="center" width="50%">
+      <img src="images/confusion_matrices/sam2-1.png" alt="SAM 2 Confusion Matrix" width="90%"><br><strong>SAM 2</strong>
+    </td>
+  </tr>
+</table>
+
+<div align="justify">
+The top three models display stronger diagonal dominance, indicating higher recall across most classes and reduced confusion between categories. MobileViT maintains stable recognition of dominant classes, MaxViT shows improved separation in terrain-related categories, and EdgeNeXt achieves balanced performance across frequent and rare classes. In contrast, SAM 2 suffers from significant misclassifications, particularly in minority and thin-object categories, relying heavily on predicting the most common classes.
+</div>
 
 ---
 
