@@ -49,6 +49,7 @@ pip install \
     jupyterlab \
     ipykernel \
     torchinfo \
+    seaborn \
     torchmetrics
 
 pip install monai --no-deps

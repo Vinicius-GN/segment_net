@@ -24,13 +24,15 @@ class Rellis3DDataset(Dataset):
                  set_name,
                  config,
                  num_samples:int=-1,
-                 transform=None           
+                 transform=None,
+                 return_data_path:bool=False          
     ):
         super(Rellis3DDataset, self).__init__()
         
         self.set_name = set_name
         self.name = set_name        
         self.config = config    
+        self.return_data_path = return_data_path
         self.data_source = self.config.get("dirs").get("data")   
         
         if self.set_name.find("_") > 0:
@@ -149,4 +151,7 @@ class Rellis3DDataset(Dataset):
         except Exception as e:
             printH("[Rellis-3D Dataset][__getitem__][ERROR]", e, "e") 
                 
-        return (img, mask)
+        if self.return_data_path:
+            return (img, mask, image_path)
+        else:
+            return (img, mask)

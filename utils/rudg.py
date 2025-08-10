@@ -24,13 +24,14 @@ class RUDGDataset(Dataset):
                  set_name,
                  config,
                  num_samples:int=-1,
-                 transform=None           
+                 transform=None,
+                 return_data_path:bool=False           
     ):
         super(RUDGDataset, self).__init__()
 
         self.set_name = set_name
         self.name = set_name
-        
+        self.return_data_path=return_data_path
         self.config = config    
         self.data_source = self.config.get("dirs").get("data")   
         
@@ -160,4 +161,7 @@ class RUDGDataset(Dataset):
         except Exception as e:
             printH("[RUDG Dataset][__getitem__][ERROR]", e, "e") 
             
-        return (img, mask)
+        if self.return_data_path:
+            return (img, mask, image_path)
+        else:
+            return (img, mask)

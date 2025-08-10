@@ -44,6 +44,7 @@ pip install \
     scikit-image==0.21.0 \
     scikit-learn==1.3.2 \
     scipy==1.10.1 \
+    seaborn==0.13.2 \
     tqdm==4.67.1 \
     pandas==2.0.3 \
     jupyterlab==4.2.5 \

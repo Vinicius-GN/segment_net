@@ -37,7 +37,8 @@ def get_dataset(
     config:Dict,
     set_name:str,
     num_samples:int=-1,
-    transform=None
+    transform=None,
+    return_data_path:bool=False
 )->Dataset:
     
     if config.get("data").get("dataset") == "a2d2":
@@ -45,35 +46,40 @@ def get_dataset(
                     set_name   = set_name,
                     config     = config,
                     num_samples= num_samples,
-                    transform = transform
+                    transform = transform,
+                    return_data_path=return_data_path
                 )
     elif config.get("data").get("dataset") == "rugd":
         return RUDGDataset(
                     set_name   = set_name,
                     config     = config,
                     num_samples= num_samples,
-                    transform = transform
+                    transform = transform,
+                    return_data_path=return_data_path
                 )
     elif config.get("data").get("dataset") == "rellis3d":
         return Rellis3DDataset(
                     set_name   = set_name,
                     config     = config,
                     num_samples= num_samples,
-                    transform = transform
+                    transform = transform,
+                    return_data_path=return_data_path
             )
     elif config.get("data").get("dataset") == "goose":
         return GooseDataset(
                     set_name   = set_name,
                     config     = config,
                     num_samples= num_samples,
-                    transform = transform
+                    transform = transform,
+                    return_data_path=return_data_path
             )
     elif config.get("data").get("dataset") == "bdd100k":
         return BDD100KDataset(
                     set_name   = set_name,
                     config     = config,
                     num_samples= num_samples,
-                    transform = transform
+                    transform = transform,
+                    return_data_path=return_data_path
             )
     else:
         raise ValueError(f"Unknown dataset: {config.get('data').get('dataset')}")
@@ -94,7 +100,8 @@ def get_dataset(
 """
 def get_train_val_dataloaders(
     config:Dict,
-    return_plot_sets:bool=True
+    return_plot_sets:bool=True,
+    return_data_path:bool=False
 )->Union[
     Tuple[DataLoader, DataLoader, DataLoader, DataLoader],
     Tuple[DataLoader, DataLoader]
@@ -161,13 +168,15 @@ def get_train_val_dataloaders(
                     config     = config,
                     set_name   = 'train',
                     num_samples= config.get("data").get("num_samples"),
-                    transform = train_transform
+                    transform = train_transform,
+                    return_data_path = return_data_path
                 )
     val_set = get_dataset(
                     config     = config,
                     set_name   = 'val',
                     num_samples= config.get("data").get("num_samples"),
-                    transform = val_transform
+                    transform = val_transform,
+                    return_data_path = return_data_path
                 )
     
     train_dataloader = DataLoader(
@@ -191,13 +200,15 @@ def get_train_val_dataloaders(
                     config     = config,
                     set_name   = 'train_plot',
                     num_samples= config.get("data").get("num_samples_plot"),
-                    transform = sample_transform
+                    transform = sample_transform,
+                    return_data_path = return_data_path
                 )
         plot_val_set = get_dataset(
                     config     = config,
                     set_name   = 'val_plot',      
                     num_samples= config.get("data").get("num_samples_plot"),
-                    transform = sample_transform
+                    transform = sample_transform,
+                    return_data_path = return_data_path
                 )
 
         plot_train_dataloader = DataLoader(
@@ -228,7 +239,8 @@ def get_train_val_dataloaders(
         test_dataloader (DataLoader): dataloader for testing data 
 """
 def get_test_dataloader(
-    config:Dict
+    config:Dict,
+    return_data_path:bool= False
 )->Tuple[DataLoader, DataLoader, DataLoader, DataLoader]:
     
     w, h = config.get("image").get("image_size")  
@@ -244,7 +256,8 @@ def get_test_dataloader(
                     config     = config,
                     set_name   = 'test',
                     num_samples= config.get("data").get("num_samples"),
-                    transform = test_transform
+                    transform = test_transform,
+                    return_data_path = return_data_path
                 )
     
     test_dataloader   = DataLoader(
