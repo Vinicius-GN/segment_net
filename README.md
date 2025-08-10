@@ -258,13 +258,17 @@ Ensure `mode = test` in the configuration file.
 
 ## 6. Model Attributes Overview 🧠
 
-Before diving into the performance results, we provide an overview of each model’s computational characteristics. These attributes help assess trade-offs between speed, memory usage, and scalability across real-world deployments (e.g., embedded systems, real-time constraints).
-
-| **Attributes**          | **MobileViT** | **DeiT** | **EfficientFormer** | **LeViT** | **SegFormer** | **PiT** | **SAM 2** |
-| ----------------------- | ------------- | -------- | ------------------- | --------- | ------------- | ------- | --------- |
-| **Batch Size**          | —             | —        | —                   | —         | —             | —       | —         |
-| **# Parameters (M)**    | —             | —        | —                   | —         | —             | —       | —         |
-| **Inference Time (ms)** | —             | —        | —                   | —         | —             | —       | —         |
+| **Model**       | **Batch size** | **# Params (MM)** | **Inference time (ms)** | **Features vector (len)** |
+|-----------------|---------------:|------------------:|------------------------:|--------------------------:|
+| MobileViT       | 32             | 19.22             | 0.0245                  | 6                         |
+| MaxVit          | 16             | 116.62            | 0.0031                  | 5                         |
+| EfficientFormer | 16             | 5.26              | 0.0132                  | 4                         |
+| TinyViT         | 32             | 12.41             | 0.0007                  | 5                         |
+| SegFormer       | 32             | 4.53              | 0.0029                  | 4                         |
+| PiT             | 64             | 12.30             | 0.0015                  | 4                         |
+| SAM 2           | 32             | 28.37             | 0.0280                  | 5                         |
+| FastVit         | 32             | 11.84             | 0.0007                  | 5                         |
+| EdgeNeXt        | 32             | 38.99             | 0.0008                  | 5                         |
 
 ---
 
@@ -272,19 +276,19 @@ Before diving into the performance results, we provide an overview of each model
 
 ### 7.1 Quantitative Results 📊
 
-Below are the quantitative benchmarks collected across all tested models using our unified framework in Rellis3D dataset. We report per-class IoU scores and overall mean IoU, as well as resource usage metrics to highlight architecture trade‑offs in speed and size.
+| **Models**          |        *sky*       |       *grass*      |       *tree*       |       *bush*       |     *concrete*     |        *mud*       |      *person*      |      *puddle*      |      *rubble*      |      *barrier*     | *log* |       *fence*      |      *vehicle*     |      *object*      |       *pole*       |       *water*      |      *asphalt*     |     *building*     |      **mIoU**      |     **Acc (%)**    |
+| ------------------- | :----------------: | :----------------: | :----------------: | :----------------: | :----------------: | :----------------: | :----------------: | :----------------: | :----------------: | :----------------: | :---: | :----------------: | :----------------: | :----------------: | :----------------: | :----------------: | :----------------: | :----------------: | :----------------: | :----------------: |
+| **MobileViT**       |  0.961 **\[best]** |        0.862       |        0.695       |        0.675       |        0.753       |        0.300       |  0.771 **\[best]** |        0.595       |        0.297       |        0.214       | 0.000 |  0.297 **\[best]** |  0.355 **\[best]** |  0.245 **\[best]** |  0.106 **\[best]** | 0.000 **\[worst]** | 0.000 **\[worst]** |  0.104 **\[best]** |        0.402       |        89.68       |
+| **MaxViT**          |        0.961       |  0.879 **\[best]** |        0.736       |        0.727       |        0.764       |  0.343 **\[best]** |        0.639       |        0.664       |  0.498 **\[best]** |        0.204       | 0.000 |        0.205       |        0.244       |        0.121       |        0.106       |  0.230 **\[best]** |        0.006       |        0.032       |  0.409 **\[best]** |  91.02 **\[best]** |
+| **EfficientFormer** |        0.954       |        0.854       |        0.708       |        0.674       |        0.745       |        0.319       |        0.561       |        0.560       |        0.088       |        0.183       | 0.000 |        0.185       |        0.179       |        0.003       |        0.061       |        0.000       |        0.004       |        0.044       |        0.340       |        89.42       |
+| **TinyViT**         |        0.953       |        0.871       |        0.706       |        0.698       |        0.739       |        0.333       | 0.423 **\[worst]** |  0.710 **\[best]** |        0.345       | 0.150 **\[worst]** | 0.000 | 0.005 **\[worst]** |        0.112       | 0.000 **\[worst]** |        0.064       |        0.000       |        0.000       | 0.007 **\[worst]** |        0.340       |        90.08       |
+| **SegFormer**       |        0.961       |        0.846       |  0.748 **\[best]** |        0.639       |        0.753       |        0.295       |        0.626       |        0.633       |        0.210       |        0.164       | 0.000 |        0.173       |        0.239       |        0.002       |        0.083       |        0.000       |        0.019       |        0.042       |        0.357       |        89.38       |
+| **PiT**             | 0.952 **\[worst]** |        0.864       |        0.697       |        0.678       | 0.700 **\[worst]** | 0.291 **\[worst]** |        0.505       |        0.625       |        0.136       |        0.181       | 0.000 |        0.144       | 0.104 **\[worst]** |        0.018       |        0.038       |        0.000       |        0.003       |        0.029       |        0.331       |        89.40       |
+| **SAM 2**           |        0.960       | 0.719 **\[worst]** | 0.666 **\[worst]** | 0.545 **\[worst]** |  0.783 **\[best]** |        0.302       |        0.540       | 0.443 **\[worst]** |        0.319       |        0.207       | 0.000 |        0.098       |        0.128       |        0.000       | 0.000 **\[worst]** |        0.000       |  0.067 **\[best]** |        0.026       | 0.322 **\[worst]** | 83.90 **\[worst]** |
+| **FastViT**         |        0.956       |        0.873       |        0.723       |        0.709       |        0.716       |        0.322       |        0.502       |        0.646       | 0.027 **\[worst]** |        0.191       | 0.000 |        0.127       |        0.128       |        0.038       |        0.000       |        0.000       |        0.000       |        0.012       |        0.332       |        90.38       |
+| **EdgeNeXt**        |        0.955       |        0.878       |        0.743       |  0.732 **\[best]** |        0.762       |        0.311       |        0.582       |        0.708       |        0.373       |  0.229 **\[best]** | 0.000 |        0.203       |        0.212       |        0.127       |        0.074       |        0.000       |        0.002       |        0.016       |        0.384       |        91.01       |
 
-| **Models**          | *sky* | *grass* | *tree* | *bush* | *concrete* | *mud* | *person* | *puddle* | *rubble* | *barrier* | *log* | *fence* | *vehicle* | *object* | *pole* | *water* | *asphalt* | *building* | **mean** |
-|--------------------|:-----:|:------:|:-----:|:-----:|:---------:|:----:|:-------:|:--------:|:--------:|:-------:|:---:|:--------:|:--------:|:--------:|:-----:|:------:|:--------:|:----------:|:--------:|
-| **MobileViT**       |       |        |       |       |           |       |         |          |          |         |     |         |          |          |       |        |          |            |          |
-| **DeiT**            |       |        |       |       |           |       |         |          |          |         |     |         |          |          |       |        |          |            |          |
-| **EfficientFormer** |       |        |       |       |           |       |         |          |          |         |     |         |          |          |       |        |          |            |          |
-| **LeViT**           |       |        |       |       |           |       |         |          |          |         |     |         |          |          |       |        |          |            |          |
-| **SegFormer**       |       |        |       |       |           |       |         |          |          |         |     |         |          |          |       |        |          |            |          |
-| **PiT**             |       |        |       |       |           |       |         |          |          |         |     |         |          |          |       |        |          |            |          |
-| **SAM 2**           |       |        |       |       |           |       |         |          |          |         |     |         |          |          |       |        |          |            |          |
-
-
+---
 
 ## 7.2 Qualitative Results 🌟
 
