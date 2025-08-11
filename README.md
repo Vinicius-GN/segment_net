@@ -258,26 +258,43 @@ python run.py --cfg cfg/rellis3d_dev.ini
 Ensure `mode = test` in the configuration file.
 
 ---
-
 ## 6. Model Attributes Overview 🧠
 
+<div align="justify">
+In this stage, a comparative analysis was carried out across different Transformer-based architectures applied to the <strong>Rellis-3D</strong> dataset, using the framework proposed in this repository.  
+The experiment encompassed a variety of modern semantic segmentation architectures, exploring variations in parameters such as <em>batch size</em> and extracted feature vector length.  
+The goal of this preliminary analysis is to provide a clear overview of each model’s attributes before assessing its quantitative and qualitative performance, enabling a better understanding of the relationship between architectural complexity and efficiency.
+</div>
+<br>
+
 | **Model**       | **Batch size** | **# Params (MM)** | **Inference time (ms)** | **Features vector (len)** |
-|-----------------|---------------:|------------------:|------------------------:|--------------------------:|
-| MobileViT       | 32             | 19.22             | 0.0245                  | 6                         |
-| MaxVit          | 16             | 116.62            | 0.0031                  | 5                         |
-| EfficientFormer | 16             | 5.26              | 0.0132                  | 4                         |
-| TinyViT         | 32             | 12.41             | 0.0007                  | 5                         |
-| SegFormer       | 32             | 4.53              | 0.0029                  | 4                         |
-| PiT             | 64             | 12.30             | 0.0015                  | 4                         |
-| SAM 2           | 32             | 28.37             | 0.0280                  | 5                         |
-| FastVit         | 32             | 11.84             | 0.0007                  | 5                         |
-| EdgeNeXt        | 32             | 38.99             | 0.0008                  | 5                         |
+| --------------- | -------------: | ----------------: | ----------------------: | ------------------------: |
+| MobileViT       |             32 |             19.22 |                  0.0245 |                         6 |
+| MaxVit          |             16 |            116.62 |                  0.0031 |                         5 |
+| EfficientFormer |             16 |              5.26 |                  0.0132 |                         4 |
+| TinyViT         |             32 |             12.41 |                  0.0007 |                         5 |
+| SegFormer       |             32 |              4.53 |                  0.0029 |                         4 |
+| PiT             |             64 |             12.30 |                  0.0015 |                         4 |
+| SAM 2           |             32 |             28.37 |                  0.0280 |                         5 |
+| FastVit         |             32 |             11.84 |                  0.0007 |                         5 |
+| EdgeNeXt        |             32 |             38.99 |                  0.0008 |                         5 |
 
 ---
 
 ## 7. Results 🚀
 
 ### 7.1 Quantitative Results 📊
+
+<div align="justify">
+To evaluate the performance of the architectures listed in Section 6, we employed widely adopted semantic segmentation metrics, including <strong>mIoU</strong> (mean Intersection over Union) and <strong>overall accuracy</strong>.  
+The table below reports the per-class results on the test set, allowing us to identify both strengths and weaknesses for each model.  
+
+Overall, three models consistently stood out: <strong>MobileViT</strong>, <strong>MaxViT</strong>, and <strong>EdgeNeXt</strong>.
+These architectures achieved the best combinations of mIoU and accuracy, demonstrating greater capability in recognizing both frequent and rare classes, while also handling small objects and complex boundaries more effectively.
+The results presented here form the basis for the qualitative analyses (Section 7.2) and the class-level confusion analysis (Section 7.3).
+
+</div>
+<br>
 
 | **Models**          |        *sky*       |       *grass*      |       *tree*       |       *bush*       |     *concrete*     |        *mud*       |      *person*      |      *puddle*      |      *rubble*      |      *barrier*     | *log* |       *fence*      |      *vehicle*     |      *object*      |       *pole*       |       *water*      |      *asphalt*     |     *building*     |      **mIoU**      |     **Acc (%)**    |
 | ------------------- | :----------------: | :----------------: | :----------------: | :----------------: | :----------------: | :----------------: | :----------------: | :----------------: | :----------------: | :----------------: | :---: | :----------------: | :----------------: | :----------------: | :----------------: | :----------------: | :----------------: | :----------------: | :----------------: | :----------------: |
@@ -358,5 +375,5 @@ If you have suggestions, feature requests, or improvements, feel free to:
 
 ## 9. License 📜
 
-This project is licensed under the **MIT License**.
+This project is licensed under the **Apache License**.
 See the [LICENSE](LICENSE) file for details.
