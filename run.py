@@ -14,15 +14,15 @@ from torchinfo import summary
 
 
 from utils.utils import split_config
-from utils.color import printH
-from utils.loss import SegmentLoss
+from utils.preprocessing.color import printH
+from utils.losses.loss import SegmentLoss
 
-from utils.dataloaders import get_train_val_dataloaders, get_test_dataloader
+from utils.dataloaders.dataloader import get_train_val_dataloaders, get_test_dataloader
 
-from utils.training import train_model
-from utils.testing import test_model
+from utils.run.training import train_model
+from utils.run.testing import test_model
 
-from utils.segmentnet import SegmentNet
+from utils.layers.segmentnet import SegmentNet
 
 """
     parse command line arguments    
@@ -96,8 +96,8 @@ def main(config:Dict, config_path:str):
         head_name = config.get("head").get("type")
         attn_name =  config.get("attention").get("type")
         dataset_name = config.get("data").get("dataset")
-        
-        log_dir = os.path.join(config.get("dirs").get("logs"), f"{dataset_name}_{backbone_name}_{attn_name}_{head_name}_{data_str}")
+        loss_name = config.get("loss").get("type")
+        log_dir = os.path.join(config.get("dirs").get("logs"), f"{dataset_name}_{backbone_name}_{attn_name}_{head_name}_{loss_name}_{data_str}")
 
         if os.path.exists(log_dir):
             shutil.rmtree(log_dir)

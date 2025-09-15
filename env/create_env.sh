@@ -19,7 +19,7 @@ conda activate $ENV_NAME
 echo -e "\033[94mInstalling core deep learning stack with CUDA\033[0m $CUDA_VERSION"
 
 pip install torch==$TORCH_VERSION torchvision==$TORCHVISION_VERSION \
-    torchaudio==$TORCHAUDIO_VERSION --index-url https://download.pytorch.org/whl/cu121
+    torchaudio==$TORCHAUDIO_VERSION --index-url https://download.pytorch.org/whl/cu124
 
 echo -e "\033[94mInstalling pip-based packages\033[0m"
 pip install \
@@ -50,11 +50,12 @@ pip install \
     jupyterlab==4.2.5 \
     ipykernel==6.29.5 \
     torchinfo \
-    torchmetrics==1.5.2
+    torchmetrics==1.5.2\
+    tabulate
 
 echo -e "\033[94mInstalling PyG with CUDA wheels\033[0m"
 pip install torch-scatter torch-sparse torch-cluster torch-spline-conv pyg-lib \
-    -f https://data.pyg.org/whl/torch-2.4.0+cu121.html
+    -f https://data.pyg.org/whl/torch-2.4.0+cu124.html
 
 pip install torch-geometric==2.6.1
 
