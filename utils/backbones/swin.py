@@ -6,7 +6,7 @@ import torch.nn.functional as F
 from torchvision.ops import FeaturePyramidNetwork
 from transformers import Swinv2Config, Swinv2Model
 
-from .base import BaseBackbone
+from ..aggregation.base import BaseBackbone
 
 
 class SwinV2_FPN(BaseBackbone):

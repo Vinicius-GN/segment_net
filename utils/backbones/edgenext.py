@@ -5,7 +5,7 @@ import torch.nn.functional as F
 from torchvision.ops import FeaturePyramidNetwork
 import timm
 
-from .base import BaseBackbone
+from ..aggregation.base import BaseBackbone
 
 class EdgeNeXt_FPN(BaseBackbone):
 

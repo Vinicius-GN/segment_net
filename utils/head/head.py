@@ -4,8 +4,14 @@ import torch.nn as nn
 import torch.nn.functional as F
 from typing import Union, List, Tuple
 
-from utils.layers.depthwise_separable_conv import DepthwiseSeparableConvBlock
-from utils.layers.deeplabv3 import DeepLabV3PlusCore
+from utils.head.depthwise_separable_conv import DepthwiseSeparableConvBlock
+from utils.head.deeplabv3 import DeepLabV3PlusCore
+from utils.head.pspnet_head import PSPNetHead
+from utils.head.ccnet_head import CCNetHead
+from utils.head.lightham_head import LightHamHead
+from utils.head.denseaspp_head import DenseASPPHead
+from utils.head.mask2former_head import Mask2FormerHead
+
 class Interpolate2D(nn.Module):
     def __init__ (self, scale, mode):
 
@@ -251,73 +257,77 @@ class LightweightTransformerHead(nn.Module):
         return x
 
 class SegFormerAllMLPHead(nn.Module):
-    #SegFormer-style all-MLP decoder head
-  
     def __init__(self, config, num_classes: int, num_feature_layers: int, embed_dim: int = None):
         super().__init__()
         self.config = config
         self.image_size = list(reversed(self.config.get("image").get("image_size")))
-        self.opt_latency = self.config.get("head").get("opt_latency")
-        self.dropout_prob = self.config.get("head").get("dropout")
-        self.norm_fn = self.config.get("model").get("norm_fn")
-
-        self.fpn_out = self.config.get("backbone").get("fpn_out_channels")
-        self.aggregate = self.config.get("backbone").get("aggregate")
-        self.num_scales = int(num_feature_layers)
-
+        self.opt_latency = bool(self.config.get("head").get("opt_latency"))
+        self.dropout_prob = float(self.config.get("head").get("dropout", 0.0))
+        self.norm_fn = self.config.get("model").get("norm_fn") or "batch_norm"
+        self.fpn_out_hint = int(self.config.get("backbone").get("fpn_out_channels"))
+        self.aggregate = (self.config.get("backbone").get("aggregate") or "").lower()
+        self.num_scales_hint = int(num_feature_layers)
         if embed_dim is None:
-            embed_dim = max(32, self.fpn_out)   # mild default
-        self.embed_dim = embed_dim
-
-        self.proj = nn.ModuleList([
-            nn.Conv2d(self.fpn_out, self.embed_dim, kernel_size=1, bias=False)
-            for _ in range(self.num_scales)
-        ])
-        if self.norm_fn == "batch_norm":
-            self.proj_norm = nn.ModuleList([nn.BatchNorm2d(self.embed_dim) for _ in range(self.num_scales)])
-        elif self.norm_fn == "group_norm":
-            ng = max(2, self.embed_dim // 16)
-            self.proj_norm = nn.ModuleList([nn.GroupNorm(ng, self.embed_dim) for _ in range(self.num_scales)])
-        else:
-            self.proj_norm = nn.ModuleList([nn.Identity() for _ in range(self.num_scales)])
-
-        fused_in = self.embed_dim * self.num_scales
-        self.fuse = nn.Conv2d(fused_in, self.embed_dim, kernel_size=3, padding=1, bias=False)
-        if self.norm_fn == "batch_norm":
-            self.fuse_norm = nn.BatchNorm2d(self.embed_dim)
-        elif self.norm_fn == "group_norm":
-            ng = max(2, self.embed_dim // 16)
-            self.fuse_norm = nn.GroupNorm(ng, self.embed_dim)
-        else:
-            self.fuse_norm = nn.Identity()
-
+            embed_dim = max(32, self.fpn_out_hint)
+        self.embed_dim = int(embed_dim)
+        self.proj = None
+        self.proj_norm = None
+        self.fuse = None
+        self.fuse_norm = None
         self.dropout = nn.Dropout(self.dropout_prob, inplace=False)
         self.classifier = nn.Conv2d(self.embed_dim, num_classes, kernel_size=1)
 
-    def _split_concat_tensor(self, x: torch.Tensor):
-        B, C, H, W = x.shape
-        expected = self.fpn_out * self.num_scales
-        if C != expected:
-            return [x]
-        return list(torch.split(x, self.fpn_out, dim=1))
+    def _make_norm(self, num_channels: int) -> nn.Module:
+        if self.norm_fn == "batch_norm":
+            return nn.BatchNorm2d(num_channels)
+        if self.norm_fn == "group_norm":
+            groups = max(2, num_channels // 16)
+            return nn.GroupNorm(groups, num_channels)
+        return nn.Identity()
 
-    def _ensure_list_features(self, x):
+    def _ensure_list_features(self, x: Union[torch.Tensor, List[torch.Tensor], Tuple[torch.Tensor, ...]]):
         if isinstance(x, (list, tuple)):
-            feats = list(x)
-        else:
-            feats = self._split_concat_tensor(x)
-        if len(feats) < self.num_scales:
-            feats = feats + [feats[-1]] * (self.num_scales - len(feats))
-        elif len(feats) > self.num_scales:
-            feats = feats[:self.num_scales]
-        return feats
+            return list(x)
+        X = x
+        B, C, H, W = X.shape
+        if self.num_scales_hint > 1 and (C % self.num_scales_hint == 0):
+            chunk = C // self.num_scales_hint
+            return list(torch.split(X, chunk, dim=1))
+        if self.fpn_out_hint > 0 and (C % self.fpn_out_hint == 0):
+            n = C // self.fpn_out_hint
+            return list(torch.split(X, self.fpn_out_hint, dim=1))
+        return [X]
 
-    def forward(self, x):
+    def _maybe_rebuild(self, feats: List[torch.Tensor]):
+        n_scales = len(feats)
+        in_chs = [int(f.shape[1]) for f in feats]
+        device = feats[0].device
+        dtype = feats[0].dtype
+        need_proj = (
+            self.proj is None
+            or len(self.proj) != n_scales
+            or any(getattr(self.proj[i], "in_channels", -1) != in_chs[i] for i in range(n_scales))
+        )
+        if need_proj:
+            proj = []
+            proj_norm = []
+            for c in in_chs:
+                conv = nn.Conv2d(c, self.embed_dim, kernel_size=1, bias=False)
+                proj.append(conv)
+                proj_norm.append(self._make_norm(self.embed_dim))
+            self.proj = nn.ModuleList(proj).to(device=device, dtype=dtype)
+            self.proj_norm = nn.ModuleList(proj_norm).to(device=device, dtype=dtype)
+        fuse_in = self.embed_dim * n_scales
+        need_fuse = (self.fuse is None) or (getattr(self.fuse, "in_channels", -1) != fuse_in)
+        if need_fuse:
+            self.fuse = nn.Conv2d(fuse_in, self.embed_dim, kernel_size=3, padding=1, bias=False).to(device=device, dtype=dtype)
+            self.fuse_norm = self._make_norm(self.embed_dim).to(device=device, dtype=dtype)
+
+    def forward(self, x: Union[torch.Tensor, List[torch.Tensor], Tuple[torch.Tensor, ...]]):
         feats = self._ensure_list_features(x)
-
+        self._maybe_rebuild(feats)
         sizes = [f.shape[-2:] for f in feats]
         H_ref, W_ref = max(sizes, key=lambda s: s[0] * s[1])
-
         proj_up = []
         for i, f in enumerate(feats):
             y = self.proj[i](f)
@@ -326,11 +336,11 @@ class SegFormerAllMLPHead(nn.Module):
             if y.shape[-2:] != (H_ref, W_ref):
                 y = F.interpolate(y, size=(H_ref, W_ref), mode="bilinear", align_corners=False)
             proj_up.append(y)
-
-        z = torch.cat(proj_up, dim=1) 
-        z = self.fuse_norm(F.gelu(self.fuse(z)))
+        z = torch.cat(proj_up, dim=1)
+        z = self.fuse(z)
+        z = self.fuse_norm(z)
+        z = F.gelu(z)
         z = self.dropout(z)
-
         if self.opt_latency:
             z = self.classifier(z)
             z = F.interpolate(z, size=self.image_size, mode="bilinear", align_corners=False)
@@ -340,7 +350,6 @@ class SegFormerAllMLPHead(nn.Module):
         return z
 
 class DeepLabV3PlusHead(nn.Module):
-
     def __init__(self, config, num_classes: int, num_feature_layers: int):
         super().__init__()
         self.config = config
@@ -366,8 +375,8 @@ class DeepLabV3PlusHead(nn.Module):
             aspp_rates = self.config.get("head").get("aspp_rates", [6, 12, 18])
 
         if aggregate == "concat":
-            in_ch_high = fpn_out * self.num_feature_layers
-            in_ch_low  = in_ch_high  
+            in_ch_high = fpn_out * max(1, self.num_feature_layers) 
+            in_ch_low  = in_ch_high
         else:
             in_ch_high = fpn_out
             in_ch_low  = fpn_out
@@ -382,8 +391,11 @@ class DeepLabV3PlusHead(nn.Module):
             norm_fn=norm_fn,
             dropout=dropout
         )
-        self.classifier = nn.Conv2d(decoder_channels if aggregate != "concat" else aspp_channels,
-                                    self.num_classes, kernel_size=1)
+
+        self.classifier = nn.Conv2d(
+            decoder_channels if aggregate not in ("", "none") and aggregate != "concat" else aspp_channels,
+            self.num_classes, kernel_size=1
+        )
 
         self._aggregate = aggregate
 
@@ -396,18 +408,17 @@ class DeepLabV3PlusHead(nn.Module):
     def forward(self, x: Union[torch.Tensor, List[torch.Tensor], Tuple[torch.Tensor, ...]]):
         feats = self._ensure_list(x)
 
-        if len(feats) > 1 and self._aggregate != "concat":
+        if self._aggregate == "concat":
+            x_in = torch.cat(feats, dim=1) if len(feats) > 1 else feats[0]
+            y = self.core.forward_single(x_in)
+
+        elif len(feats) > 1:
             f_high, f_low = self.core.pick_high_low(feats)
             y = self.core.forward_pair(f_high, f_low)
-            if self.opt_latency:
-                y = self.classifier(y)
-                y = F.interpolate(y, size=self.image_size, mode="bilinear", align_corners=False)
-            else:
-                y = F.interpolate(y, size=self.image_size, mode="bilinear", align_corners=False)
-                y = self.classifier(y)
-            return y
 
-        y = self.core.forward_single(feats[0])
+        else:
+            y = self.core.forward_single(feats[0])
+
         if self.opt_latency:
             y = self.classifier(y)
             y = F.interpolate(y, size=self.image_size, mode="bilinear", align_corners=False)

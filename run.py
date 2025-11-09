@@ -6,7 +6,7 @@ import datetime
 import shutil
 import warnings
 
-from typing import Dict, Tuple
+from typing import Dict, Tuple, Optional
 
 import torch
 from torch.optim.lr_scheduler import CosineAnnealingLR
@@ -17,30 +17,48 @@ from utils.utils import split_config
 from utils.preprocessing.color import printH
 from utils.losses.loss import SegmentLoss
 
-from utils.dataloaders.dataloader import get_train_val_dataloaders, get_test_dataloader
+from utils.dataloaders.dataloader import get_train_val_dataloaders, get_test_dataloader, get_raw_inference_dataloader
 
 from utils.run.training import train_model
 from utils.run.testing import test_model
+from utils.run.raw_inference import run_raw_inference
 
-from utils.layers.segmentnet import SegmentNet
+from utils.head.segmentnet import SegmentNet
 
 """
     parse command line arguments    
     Returns:
         args (argparse.Namespace): parsed arguments
 """
-def parse_arguments()-> argparse.Namespace:
-	parser = argparse.ArgumentParser()
+def parse_arguments() -> argparse.Namespace:
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--cfg",
+        "-c",
+        type=str,
+        required=True,
+        help="Path to the configuration file",
+    )
+    parser.add_argument(
+        "--gpu",
+        type=int,
+        required=False,
+        default=0,
+        help="CUDA device index (e.g., 0, 1)",
+    )
+    return parser.parse_args()
 
-	parser.add_argument(
-		"--cfg",
-		type=str,
-		required=True,
-		help="Directory where the config file is saved",
-	)
 
-	return parser.parse_args()
-
+def select_device(gpu: Optional[int]) -> torch.device:
+    if gpu is not None:
+        if not torch.cuda.is_available():
+            raise RuntimeError("CUDA is not available")
+        if gpu < 0 or gpu >= torch.cuda.device_count():
+            raise RuntimeError(f"Invalid CUDA device index: {gpu}")
+        return torch.device(f"cuda:{gpu}")
+    if torch.cuda.is_available():
+        return torch.device("cuda:0")
+    return torch.device("cpu")
 
 """
     main function to train.py script
@@ -50,11 +68,11 @@ def parse_arguments()-> argparse.Namespace:
     Returns:
         None
 """
-def main(config:Dict, config_path:str):
+def main(config:Dict, config_path:str, gpu: Optional[int] = 0):
     
     config = split_config(config)
 
-    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    device = select_device(gpu)
 
     if (config.get("mode").get("mode") == "train") or\
        (config.get("mode").get("mode") == "resume"):
@@ -66,6 +84,11 @@ def main(config:Dict, config_path:str):
         
         test_dataloader =\
             get_test_dataloader(config)
+        
+    elif (config.get("mode").get("mode") == "raw_inference"):
+    
+        raw_infer_dataloader = get_raw_inference_dataloader(config)
+
     else:
         raise ValueError(f"Invalid mode: {config.get('mode').get('mode')}. "
                          "Valid modes are 'train', 'resume', or 'test'.")
@@ -242,8 +265,35 @@ def main(config:Dict, config_path:str):
                    save_dir=log_dir,
                    history=history,
                    config=config)
-    
+        
+    elif config.get("mode").get("mode") == "raw_inference":
+        printH("[Image Segmentation][main]", f"raw_inference...", "i")
 
+        log_dir = config.get("dirs").get("logs")
+
+        if not os.path.exists(log_dir):
+            raise FileNotFoundError(f"Checkpoint folder not found! (log_dir:{log_dir})")
+        
+        printH("[Image Segmentation][main]", f"log_dir: {log_dir}", "i")
+
+        checkpoint_path = os.path.join(log_dir, "best_model.pth")
+        
+        if not os.path.exists(checkpoint_path):
+            raise FileNotFoundError(f"Checkpoint file not found! (checkpoint:{checkpoint_path})")
+        
+        printH("[Image Segmentation][main]", f"checkpoint: {checkpoint_path}", "i")
+            
+        model.load_state_dict(torch.load(checkpoint_path, map_location=device))
+        model.to(device)
+
+        out_dir = os.path.join(log_dir, "raw_inference")
+        os.makedirs(out_dir, exist_ok=True)
+                
+        run_raw_inference(model=model,
+                   dataloader= raw_infer_dataloader,
+                   device=device,
+                   save_dir=out_dir,
+                   config=config)
 
 if __name__ == "__main__":
 

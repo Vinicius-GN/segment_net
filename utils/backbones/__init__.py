@@ -2,7 +2,7 @@ import pkgutil
 import importlib
 import inspect
 
-from .base import BaseBackbone
+from ..aggregation.base import BaseBackbone
 
 __all__ = []
 

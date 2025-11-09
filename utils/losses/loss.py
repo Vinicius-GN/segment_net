@@ -1,6 +1,7 @@
 import torch
 
 from typing import List, Tuple, Dict
+from typing import Optional
 import torch.nn.functional as F
 
 from monai.losses import HausdorffDTLoss
@@ -12,6 +13,10 @@ from .sensitivity_specificity import SensitivitySpecificityLoss
 from .focal_tversky import FocalTverskyLoss
 from .jaccard import JaccardLoss
 from .top_k import TopKLoss
+from .dmce import DistanceMapCELoss
+from .conditional_boundary_loss import ConditionalBoundaryLoss
+from .active_boundary_loss import ActiveBoundaryLoss
+from .inverseform_loss import InverseFormLoss
 
 class SegmentLoss(torch.nn.Module):
 
@@ -56,9 +61,9 @@ class SegmentLoss(torch.nn.Module):
 
         elif self.config.get("loss").get("type") == "focal_tversky":
             self.loss = FocalTverskyLoss(
-                alpha = 1.0,
-                gamma = 2.0, 
-                beta  = 0.5,
+                alpha = 0.3,
+                gamma = 4./3., 
+                beta  = 0.7,
                 smooth= 1.0
             )
         elif self.config.get("loss").get("type") == "focal_cross_entropy":
@@ -101,6 +106,43 @@ class SegmentLoss(torch.nn.Module):
             self.loss = TopKLoss(
                  k_frac=0.25, gamma=2.0
             )
+        elif self.config.get("loss").get("type") == "dmce_dice":
+            self.loss = DistanceMapCEDiceLoss(
+                 reduction=reduction
+            )
+        elif self.config.get("loss").get("type") == "conditional_boundary_dice":
+            self.loss = ConditionalBoundaryDiceLoss(
+                kernel_size=self.config.get("loss").get("ccas_kernel", 5),
+                alpha=self.config.get("loss").get("a2c_alpha", 0.1),
+                beta=self.config.get("loss").get("a2pn_beta", 0.5),
+                reduction=reduction,
+                class_weights=weights,
+            )
+
+        elif self.config.get("loss").get("type") == "active_boundary_dice":
+            self.loss = ActiveBoundaryDiceLoss(
+                boundary_ratio=self.config.get("loss").get("boundary_ratio", 0.01),
+                theta=self.config.get("loss").get("theta", 20.0),
+                label_smoothing_max=self.config.get("loss").get("abl_label_smoothing_max", 0.0),
+                use_2n_for_pb=self.config.get("loss").get("use_2n_for_pb", True),
+                dilate_pb=self.config.get("loss").get("dilate_pb", 0),
+                reduction=reduction
+            )
+
+        elif self.config.get("loss").get("type") == "inverseform_dice":
+            self.loss = InverseFormDiceLoss(
+                mode=self.config.get("loss").get("if_mode", "euclidean_affine"),
+                tile=self.config.get("loss").get("if_tile", 64),
+                stride=self.config.get("loss").get("if_stride", None),
+                reduce=self.config.get("loss").get("if_reduce", 4),
+                lam_geo=self.config.get("loss").get("if_lam_geo", 0.1),
+                itn_weights=self.config.get("loss").get("itn_weights", None),
+                freeze_itn=self.config.get("loss").get("freeze_itn", True),
+                reduction=reduction,
+                dice_cls=DiceLoss(use_sigmoid=False, reduction=reduction),
+                lambda_if=self.config.get("loss").get("lambda_if", 0.5)
+            )
+
         else:
             raise ValueError(f"Loss type {self.config.get('loss').get('type')} not supported!")
 
@@ -177,8 +219,6 @@ class LovaszSoftmax(torch.nn.Module):
                               per_image=False)        
         return loss
     
-    
-    
 class HausdorffDTDice(torch.nn.Module):
     def __init__(self, reduction="mean"):
         super(HausdorffDTDice, self).__init__()
@@ -219,3 +259,54 @@ class MulticlassBoundaryDiceLoss(torch.nn.Module):
         dice_loss =  self.dice(logits, targets)
 
         return 0.5*boundary_loss + dice_loss
+    
+class DistanceMapCEDiceLoss(torch.nn.Module):
+    def __init__(self, reduction='mean'):
+        super(DistanceMapCEDiceLoss, self).__init__()
+        self.dmce = DistanceMapCELoss(reduction=reduction)
+        self.dice = DiceLoss(use_sigmoid=False, reduction=reduction)
+
+    def forward(self, logits, targets):
+        dmce_loss = self.dmce(logits, targets)
+        dice_loss = self.dice(logits, targets)
+        return 0.5*dmce_loss + dice_loss
+
+class ConditionalBoundaryDiceLoss(torch.nn.Module):
+    def __init__(self, kernel_size:int=5, alpha:float=0.1, beta:float=0.5, reduction:str='mean', class_weights=None):
+        super().__init__()
+        self.cbl = ConditionalBoundaryLoss(kernel_size=kernel_size, alpha=alpha, beta=beta, reduction=reduction, class_weights=class_weights)
+        self.dice = DiceLoss(use_sigmoid=False, reduction=reduction)
+    def forward(self, logits, targets):
+        cbl = self.cbl(logits, targets)
+        dsc = self.dice(logits, targets)
+        return 0.5*cbl + dsc
+
+
+class ActiveBoundaryDiceLoss(torch.nn.Module):
+    def __init__(self, boundary_ratio=0.01, theta=20.0, label_smoothing_max=0.0, use_2n_for_pb=True, dilate_pb=0, reduction="mean"):
+        super(ActiveBoundaryDiceLoss, self).__init__()
+        self.abl = ActiveBoundaryLoss(
+            boundary_ratio=boundary_ratio,
+            theta=theta,
+            label_smoothing_max=label_smoothing_max,
+            use_2n_for_pb=use_2n_for_pb,
+            dilate_pb=dilate_pb,
+            reduction=reduction
+        )
+        self.dice = DiceLoss(use_sigmoid=False, reduction=reduction)
+
+    def forward(self, logits, targets):
+        abl_loss = self.abl(logits, targets)
+        dice_loss = self.dice(logits, targets)
+        return 0.5*abl_loss + dice_loss
+
+class InverseFormDiceLoss(torch.nn.Module):
+    def __init__(self, mode:str="euclidean_affine", tile:int=64, stride:Optional[int]=None, reduce:int=4, lam_geo:float=0.1, itn:Optional[torch.nn.Module]=None, itn_weights:Optional[str]=None, freeze_itn:bool=True, reduction:str="mean", dice_cls:Optional[torch.nn.Module]=None, lambda_if:float=0.5):
+        super().__init__()
+        self.if_loss = InverseFormLoss(mode=mode, tile=tile, stride=stride, reduce=reduce, lam_geo=lam_geo, itn=itn, itn_weights=itn_weights, freeze_itn=freeze_itn, reduction=reduction)
+        self.dice = dice_cls
+        self.lambda_if = lambda_if
+    def forward(self, logits, targets):
+        lif = self.if_loss(logits, targets)
+        if self.dice is None: return lif
+        return self.lambda_if*lif + self.dice(logits, targets)

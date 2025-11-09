@@ -4,7 +4,7 @@ import torch.nn.functional as F
 
 from torchvision.ops import FeaturePyramidNetwork
 import timm
-from .base import BaseBackbone
+from ..aggregation.base import BaseBackbone
 
 
 class LeViT_FPN(BaseBackbone):

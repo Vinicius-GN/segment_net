@@ -7,6 +7,7 @@ import torch
 from torch.utils.data import DataLoader
 from torchvision import transforms
 from torch.utils.data import Dataset
+import cv2
 
 with warnings.catch_warnings():
     warnings.simplefilter("ignore", category=UserWarning)
@@ -15,6 +16,7 @@ with warnings.catch_warnings():
     from albumentations.pytorch import ToTensorV2
 
 from utils.preprocessing.preprocessing import PILNumpyToTensor
+from utils.dataloaders.raw_inference_loader import get_raw_inference_dataloader
 from utils.dataloaders.a2d2 import A2D2Dataset
 from utils.dataloaders.rudg import RUDGDataset
 from utils.dataloaders.rellis3d import Rellis3DDataset
@@ -106,60 +108,55 @@ def get_train_val_dataloaders(
     Tuple[DataLoader, DataLoader, DataLoader, DataLoader],
     Tuple[DataLoader, DataLoader]
 ]:
-    
-    w, h = config.get("image").get("image_size")  
-        
+    ENABLE_AUG = True
+    w, h = config.get("image").get("image_size")
+
     train_transform = A.Compose([
-        A.SmallestMaxSize(max_size=w * 2, p=1.0),
-        A.RandomCrop(height=h, width=w, p=1.0),
+        A.LongestMaxSize(max_size=max(w, h), p=1.0),
+
+        A.PadIfNeeded(
+            min_height=h, min_width=w,
+            border_mode=cv2.BORDER_CONSTANT,
+            value=(114, 114, 114),
+            p=1.0
+        ),
+
+        A.HorizontalFlip(p=0.5 if ENABLE_AUG else 0.0),
+        A.Affine(
+            scale=(0.97, 1.03),
+            translate_percent={"x": 0.03, "y": 0.03},
+            rotate=(-2, 2),
+            shear=None,
+            p=0.20 if ENABLE_AUG else 0.0
+        ),
+
         A.OneOf([
-            A.NoOp(),
-            A.HorizontalFlip(p=1.0),
-            A.VerticalFlip(p=1.0),
-            A.Compose([
-                A.HorizontalFlip(p=1.0), 
-                A.VerticalFlip(p=1.0)
-            ]),
-            A.Affine(
-                translate_percent={"x": 0.02, "y": 0.02}, 
-                scale=(1.0, 1.1), 
-                rotate=0,
-                p=0.2
-            ),
-        ], p=0.50),
+            A.ColorJitter(brightness=0.15, contrast=0.15, saturation=0.15, hue=0.05, p=1.0),
+            A.RandomBrightnessContrast(brightness_limit=0.2, contrast_limit=0.2, p=1.0),
+            A.HueSaturationValue(hue_shift_limit=10, sat_shift_limit=15, val_shift_limit=10, p=1.0),
+            A.RandomGamma(gamma_limit=(92,108), p=1.0),
+            A.PlanckianJitter(mode="blackbody", temperature_limit=(3500, 7500), sampling_method="uniform", p=1.0),
+        ], p=0.5 if ENABLE_AUG else 0.0),
+
         A.OneOf([
-            A.NoOp(),
-            A.RandomBrightnessContrast(p=0.3),
-            A.ColorJitter(brightness=0.2, 
-                          contrast=0.2, 
-                          saturation=0.2, 
-                          hue=0.1,
-                          p=1.0),
-            A.RandomGamma(p=1.0),
-            A.HueSaturationValue(hue_shift_limit=20, 
-                                 sat_shift_limit=30, 
-                                 val_shift_limit=20, 
-                                 p=1.0),
-            A.PlanckianJitter(mode="blackbody", 
-                              temperature_limit=(3000, 9000),
-                              sampling_method="uniform",
-                              p=1.0),
-        ], p=0.80),   
-        A.OneOf([
-            A.NoOp(),   
-            A.GaussNoise(std_range=(0.1, 0.2), p=1.0),
-            A.MotionBlur(blur_limit=(3, 5), p=1.0),
-            A.GaussianBlur(p=1.0),
-        ], p=0.50),
-        A.Normalize(mean=(0.485, 0.456, 0.406), 
-                    std=(0.229, 0.224, 0.225)),
+            A.GaussNoise(var_limit=(5.0, 20.0), per_channel=False, p=1.0),
+            A.MotionBlur(blur_limit=3, p=1.0),
+            A.GaussianBlur(blur_limit=(3,5), p=1.0),
+        ], p=0.15 if ENABLE_AUG else 0.0),
+
+        A.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)),
         ToTensorV2()
-    ])    
-    
+    ])
+
     val_transform = A.Compose([
-        A.Resize(height=h, width=w),
-        A.Normalize(mean=(0.485, 0.456, 0.406), 
-                    std=(0.229, 0.224, 0.225)),
+        A.LongestMaxSize(max_size=max(w, h), p=1.0),
+        A.PadIfNeeded(
+            min_height=h, min_width=w,
+            border_mode=cv2.BORDER_CONSTANT,
+            value=(114, 114, 114),
+            p=1.0
+        ),
+        A.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)),
         ToTensorV2()
     ])
       

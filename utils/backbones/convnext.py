@@ -6,7 +6,7 @@ from torchvision.ops import FeaturePyramidNetwork
 from torchvision.models.feature_extraction import create_feature_extractor
 import timm
 
-from .base import BaseBackbone
+from ..aggregation.base import BaseBackbone
 
 class ConvNeXtV2_FPN(BaseBackbone):
 

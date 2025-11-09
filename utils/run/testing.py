@@ -16,7 +16,7 @@ from utils.metrics.metrics import image_dice, metrics_from_confmat, classificati
 from utils.debug.tables import print_test_metric_table, print_report_table, print_test_macro_table
 from utils.debug.image_grid import save_grid_samples
 from utils.losses.loss import SegmentLoss
-from utils.layers.segmentnet import SegmentNet
+from utils.head.segmentnet import SegmentNet
 
 
 

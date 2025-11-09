@@ -106,11 +106,13 @@ class BDD100KDataset(Segdataset):
             mask = self.map_class_from_color(mask, image_label_path)
 
             if self.transform:
+                
                 augmented = self.transform(image=img, mask=mask)
                 img = augmented['image']
                 mask = augmented['mask'].long()  
                 
         except Exception as e:
+            print(img.shape, mask.shape, image_path)
             printH("[BDD100k Dataset][__getitem__][ERROR]", e, "e") 
                 
         if self.return_data_path:

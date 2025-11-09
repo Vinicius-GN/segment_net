@@ -10,7 +10,7 @@ from utils.utils import  color_image
 
 import matplotlib.pyplot as plt
 
-from ..layers.segmentnet import SegmentNet
+from ..head.segmentnet import SegmentNet
 
 def save_grid_samples(model:SegmentNet, 
                       dataset:DataLoader, 

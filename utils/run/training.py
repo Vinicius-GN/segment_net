@@ -16,7 +16,7 @@ from utils.metrics.metrics import image_dice, metrics_from_confmat
 from utils.debug.tables import print_metric_table
 from utils.debug.image_grid import save_grid_samples
 from utils.losses.loss import SegmentLoss
-from utils.layers.segmentnet import SegmentNet
+from utils.head.segmentnet import SegmentNet
 from utils.debug.tensorboard_logger import TensorboardLogger
 
 """
@@ -131,8 +131,9 @@ def train_model(
         train_first_batch = None
         
         optimizer.zero_grad()
-        for step, (x_img, y_img) in enumerate(train_dataloader):
-            init_step_time = time.time()
+        init_step_time = time.time()
+
+        for step, (x_img, y_img) in enumerate(train_dataloader):            
             
             x_img, y_img = x_img.to(device), y_img.to(device)
             batch_size = x_img.shape[0]
@@ -188,6 +189,7 @@ def train_model(
             history["train"]["image"]["dice"].append([epoch, step, img_dice])
                         
             mean_step_train_time.append(time.time()-init_step_time)
+            init_step_time = time.time()
 
             if (step%steps_train == 0):
                 (_, train_micro_acc, _),\

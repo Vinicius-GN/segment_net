@@ -1,0 +1,817 @@
+(base) lrm@lrm-4090:~/workspace/segment_net$ conda activate pytorch-env
+(pytorch-env) lrm@lrm-4090:~/workspace/segment_net$ bash run_all.sh 
+Running training with cfg/dennis/bdd100k_5090_maxxvitv2_ss.ini
+[Image Segmentation][main] creating model...
+[BDD100k Dataset][test] creating dataloader...
+[BDD100k Dataset][test] loaded the metadata!
+100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 998/998 [00:00<00:00, 405887.27it/s]
+[BDD100k Dataset][test] found 998 samples!
+[BDD100k Dataset][init] color LUT built with 20 entries.
+[SegmentNet] init...
+[Image Segmentation][main] model summary:
+=============================================================================================================================
+Layer (type:depth-idx)                                                      Output Shape              Param #
+=============================================================================================================================
+SegmentNet                                                                  [1, 20, 400, 640]         --
+├─MaxxViTV2_FPN: 1-1                                                        [1, 128, 112, 112]        --
+│    └─MaxxVit: 2-1                                                         [1, 1024, 7, 7]           --
+│    │    └─Module: 3-1                                                     --                        75,584
+│    │    └─Module: 3-2                                                     --                        114,989,880
+│    └─FeaturePyramidNetwork: 2-2                                           [1, 128, 7, 7]            --
+│    │    └─ModuleList: 3-11                                                --                        (recursive)
+│    │    └─ModuleList: 3-12                                                --                        (recursive)
+│    │    └─ModuleList: 3-11                                                --                        (recursive)
+│    │    └─ModuleList: 3-12                                                --                        (recursive)
+│    │    └─ModuleList: 3-11                                                --                        (recursive)
+│    │    └─ModuleList: 3-12                                                --                        (recursive)
+│    │    └─ModuleList: 3-11                                                --                        (recursive)
+│    │    └─ModuleList: 3-12                                                --                        (recursive)
+│    │    └─ModuleList: 3-11                                                --                        (recursive)
+│    │    └─ModuleList: 3-12                                                --                        (recursive)
+│    └─BatchNorm2d: 2-3                                                     [1, 128, 112, 112]        256
+│    └─GELU: 2-4                                                            [1, 128, 112, 112]        --
+│    └─Dropout2d: 2-5                                                       [1, 128, 112, 112]        --
+├─ClassQueryAttention: 1-2                                                  [1, 128, 112, 112]        4,864
+│    └─Conv2d: 2-6                                                          [1, 32, 112, 112]         4,128
+│    └─Conv2d: 2-7                                                          [1, 32, 112, 112]         4,128
+│    └─Dropout: 2-8                                                         [1, 20, 12544]            --
+├─LightweightTransformerHead: 1-3                                           [1, 20, 400, 640]         512,000
+│    └─Conv2d: 2-9                                                          [1, 32, 112, 112]         4,128
+│    └─AvgPool2d: 2-10                                                      [1, 32, 56, 56]           --
+│    └─TransformerEncoder: 2-11                                             [1, 3136, 32]             --
+│    │    └─ModuleList: 3-13                                                --                        25,408
+│    └─Conv2d: 2-12                                                         [1, 20, 112, 112]         660
+=============================================================================================================================
+Total params: 116,621,740
+Trainable params: 116,621,740
+Non-trainable params: 0
+Total mult-adds (G): 13.32
+=============================================================================================================================
+Input size (MB): 3.07
+Forward/backward pass size (MB): 493.83
+Params size (MB): 463.96
+Estimated Total Size (MB): 960.86
+=============================================================================================================================
+[Image Segmentation][main] testing...
+[Image Segmentation][main] log_dir: /home/lrm/workspace/segment_net/logs/bdd100k_maxxvitv2_query_transformer_sensitivity_specificity_20251013-004754
+[Image Segmentation][main] checkpoint: /home/lrm/workspace/segment_net/logs/bdd100k_maxxvitv2_query_transformer_sensitivity_specificity_20251013-004754/best_model.pth
+run.py:235: FutureWarning: You are using `torch.load` with `weights_only=False` (the current default value), which uses the default pickle module implicitly. It is possible to construct malicious pickle data which will execute arbitrary code during unpickling (See https://github.com/pytorch/pytorch/blob/main/SECURITY.md#untrusted-models for more details). In a future release, the default value for `weights_only` will be flipped to `True`. This limits the functions that could be executed during unpickling. Arbitrary objects will no longer be allowed to be loaded via this mode unless they are explicitly allowlisted by the user via `torch.serialization.add_safe_globals`. We recommend you start setting `weights_only=True` for any use case where you don't have full control of the loaded file. Please open an issue on GitHub for any issues related to this experimental feature.
+  model.load_state_dict(torch.load(checkpoint_path, map_location=device))
+
+100%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 63/63 [00:26<00:00,  2.37it/s]
+------------------------------
+
+Time: 0:00:26.578943
+
+Test   | loss:  3.316 | dice: 0.703 | macro acc: 0.5464 | macro miou: 0.3802 | micro acc: 0.8603 | micro miou: 0.7549 | inf. time: 0.0000 |
+
+-------------------------------- IMAGE --------------------------------
++---------------+--------+-------+--------+-----------+----------+----------+
+|     Class     |  Acc   | mIoU  | Recall | Precision | F1-Score | Support  |
++---------------+--------+-------+--------+-----------+----------+----------+
+|    Unknown    | 79.687 | 0.687 | 0.797  |   0.833   |  0.815   | 34732358 |
+|     Road      | 92.772 | 0.887 | 0.928  |   0.953   |  0.940   | 54946692 |
+|   Sidewalk    | 79.057 | 0.492 | 0.791  |   0.566   |  0.659   | 5234924  |
+|   Building    | 82.918 | 0.733 | 0.829  |   0.863   |  0.846   | 38115406 |
+|     Wall      | 0.000  | 0.000 | 0.000  |   0.000   |  0.000   |  911654  |
+|     Fence     | 61.888 | 0.295 | 0.619  |   0.360   |  0.456   | 2059987  |
+|     Pole      | 0.000  | 0.000 | 0.000  |   0.000   |  0.000   | 2478670  |
+| Traffic Light | 75.196 | 0.155 | 0.752  |   0.163   |  0.269   |  346932  |
+| Traffic Sign  | 63.920 | 0.143 | 0.639  |   0.155   |  0.250   |  590562  |
+|  Vegetation   | 85.066 | 0.770 | 0.851  |   0.890   |  0.870   | 39546334 |
+|    Terrain    | 72.645 | 0.397 | 0.726  |   0.467   |  0.569   | 2329993  |
+|      Sky      | 94.604 | 0.906 | 0.946  |   0.955   |  0.950   | 46050664 |
+|    Person     | 76.668 | 0.299 | 0.767  |   0.328   |  0.460   |  632689  |
+|     Rider     | 0.000  | 0.000 | 0.000  |   0.000   |  0.000   |  25316   |
+|      Car      | 92.303 | 0.811 | 0.923  |   0.870   |  0.896   | 23146469 |
+|     Truck     | 55.983 | 0.405 | 0.560  |   0.593   |  0.576   | 2598471  |
+|      Bus      | 80.121 | 0.625 | 0.801  |   0.739   |  0.769   | 1609724  |
+|     Train     | 0.000  | 0.000 | 0.000  |   0.000   |  0.000   |  30158   |
+|  Motorcycle   | 0.000  | 0.000 | 0.000  |   0.000   |  0.000   |  60497   |
+|    Bicycle    | 0.000  | 0.000 | 0.000  |   0.000   |  0.000   |  40500   |
++---------------+--------+-------+--------+-----------+----------+----------+
+
++---------------+--------+-----------+----------+-----------+
+|    Metric     | Recall | Precision | F1-Score |  Support  |
++---------------+--------+-----------+----------+-----------+
+|  Macro Avg.   | 0.546  |   0.437   |  0.466   | 255488000 |
+| Weighted Avg. |  0.86  |   0.867   |  0.861   | 255488000 |
++---------------+--------+-----------+----------+-----------+
+
+-----------------------------------------------------------------------
+[Image Segmentation][test] done!
+[Image Segmentation][test] elapsed time: 0:00:26.617040
+Running training with cfg/dennis/bdd100k_5090_maxxvitv2_lovasz.ini
+[Image Segmentation][main] creating model...
+[BDD100k Dataset][test] creating dataloader...
+[BDD100k Dataset][test] loaded the metadata!
+100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 998/998 [00:00<00:00, 410625.41it/s]
+[BDD100k Dataset][test] found 998 samples!
+[BDD100k Dataset][init] color LUT built with 20 entries.
+[SegmentNet] init...
+[Image Segmentation][main] model summary:
+=============================================================================================================================
+Layer (type:depth-idx)                                                      Output Shape              Param #
+=============================================================================================================================
+SegmentNet                                                                  [1, 20, 400, 640]         --
+├─MaxxViTV2_FPN: 1-1                                                        [1, 128, 112, 112]        --
+│    └─MaxxVit: 2-1                                                         [1, 1024, 7, 7]           --
+│    │    └─Module: 3-1                                                     --                        75,584
+│    │    └─Module: 3-2                                                     --                        114,989,880
+│    └─FeaturePyramidNetwork: 2-2                                           [1, 128, 7, 7]            --
+│    │    └─ModuleList: 3-11                                                --                        (recursive)
+│    │    └─ModuleList: 3-12                                                --                        (recursive)
+│    │    └─ModuleList: 3-11                                                --                        (recursive)
+│    │    └─ModuleList: 3-12                                                --                        (recursive)
+│    │    └─ModuleList: 3-11                                                --                        (recursive)
+│    │    └─ModuleList: 3-12                                                --                        (recursive)
+│    │    └─ModuleList: 3-11                                                --                        (recursive)
+│    │    └─ModuleList: 3-12                                                --                        (recursive)
+│    │    └─ModuleList: 3-11                                                --                        (recursive)
+│    │    └─ModuleList: 3-12                                                --                        (recursive)
+│    └─BatchNorm2d: 2-3                                                     [1, 128, 112, 112]        256
+│    └─GELU: 2-4                                                            [1, 128, 112, 112]        --
+│    └─Dropout2d: 2-5                                                       [1, 128, 112, 112]        --
+├─ClassQueryAttention: 1-2                                                  [1, 128, 112, 112]        4,864
+│    └─Conv2d: 2-6                                                          [1, 32, 112, 112]         4,128
+│    └─Conv2d: 2-7                                                          [1, 32, 112, 112]         4,128
+│    └─Dropout: 2-8                                                         [1, 20, 12544]            --
+├─LightweightTransformerHead: 1-3                                           [1, 20, 400, 640]         512,000
+│    └─Conv2d: 2-9                                                          [1, 32, 112, 112]         4,128
+│    └─AvgPool2d: 2-10                                                      [1, 32, 56, 56]           --
+│    └─TransformerEncoder: 2-11                                             [1, 3136, 32]             --
+│    │    └─ModuleList: 3-13                                                --                        25,408
+│    └─Conv2d: 2-12                                                         [1, 20, 112, 112]         660
+=============================================================================================================================
+Total params: 116,621,740
+Trainable params: 116,621,740
+Non-trainable params: 0
+Total mult-adds (G): 13.32
+=============================================================================================================================
+Input size (MB): 3.07
+Forward/backward pass size (MB): 493.83
+Params size (MB): 463.96
+Estimated Total Size (MB): 960.86
+=============================================================================================================================
+[Image Segmentation][main] testing...
+[Image Segmentation][main] log_dir: /home/lrm/workspace/segment_net/logs/bdd100k_maxxvitv2_query_transformer_lovasz_softmax_20251013-021507
+[Image Segmentation][main] checkpoint: /home/lrm/workspace/segment_net/logs/bdd100k_maxxvitv2_query_transformer_lovasz_softmax_20251013-021507/best_model.pth
+run.py:235: FutureWarning: You are using `torch.load` with `weights_only=False` (the current default value), which uses the default pickle module implicitly. It is possible to construct malicious pickle data which will execute arbitrary code during unpickling (See https://github.com/pytorch/pytorch/blob/main/SECURITY.md#untrusted-models for more details). In a future release, the default value for `weights_only` will be flipped to `True`. This limits the functions that could be executed during unpickling. Arbitrary objects will no longer be allowed to be loaded via this mode unless they are explicitly allowlisted by the user via `torch.serialization.add_safe_globals`. We recommend you start setting `weights_only=True` for any use case where you don't have full control of the loaded file. Please open an issue on GitHub for any issues related to this experimental feature.
+  model.load_state_dict(torch.load(checkpoint_path, map_location=device))
+
+100%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 63/63 [00:26<00:00,  2.34it/s]
+------------------------------
+
+Time: 0:00:26.928721
+
+Test   | loss:  4.547 | dice: 0.692 | macro acc: 0.5815 | macro miou: 0.4548 | micro acc: 0.8730 | micro miou: 0.7746 | inf. time: 0.0011 |
+
+-------------------------------- IMAGE --------------------------------
++---------------+--------+-------+--------+-----------+----------+----------+
+|     Class     |  Acc   | mIoU  | Recall | Precision | F1-Score | Support  |
++---------------+--------+-------+--------+-----------+----------+----------+
+|    Unknown    | 80.383 | 0.710 | 0.804  |   0.859   |  0.831   | 34732358 |
+|     Road      | 95.156 | 0.901 | 0.952  |   0.945   |  0.948   | 54946692 |
+|   Sidewalk    | 71.775 | 0.549 | 0.718  |   0.701   |  0.709   | 5234924  |
+|   Building    | 85.551 | 0.757 | 0.856  |   0.869   |  0.862   | 38115406 |
+|     Wall      | 42.781 | 0.294 | 0.428  |   0.484   |  0.454   |  911654  |
+|     Fence     | 26.668 | 0.230 | 0.267  |   0.627   |  0.374   | 2059987  |
+|     Pole      | 65.940 | 0.158 | 0.659  |   0.172   |  0.273   | 2478670  |
+| Traffic Light | 62.060 | 0.229 | 0.621  |   0.266   |  0.372   |  346932  |
+| Traffic Sign  | 41.007 | 0.310 | 0.410  |   0.560   |  0.474   |  590562  |
+|  Vegetation   | 86.281 | 0.792 | 0.863  |   0.906   |  0.884   | 39546334 |
+|    Terrain    | 58.597 | 0.436 | 0.586  |   0.630   |  0.607   | 2329993  |
+|      Sky      | 93.878 | 0.914 | 0.939  |   0.972   |  0.955   | 46050664 |
+|    Person     | 76.354 | 0.449 | 0.764  |   0.522   |  0.620   |  632689  |
+|     Rider     | 0.000  | 0.000 | 0.000  |   0.000   |  0.000   |  25316   |
+|      Car      | 92.882 | 0.843 | 0.929  |   0.902   |  0.915   | 23146469 |
+|     Truck     | 53.407 | 0.481 | 0.534  |   0.829   |  0.649   | 2598471  |
+|      Bus      | 82.825 | 0.724 | 0.828  |   0.852   |  0.840   | 1609724  |
+|     Train     | 0.000  | 0.000 | 0.000  |   0.000   |  0.000   |  30158   |
+|  Motorcycle   | 0.000  | 0.000 | 0.000  |   0.000   |  0.000   |  60497   |
+|    Bicycle    | 47.388 | 0.317 | 0.474  |   0.490   |  0.482   |  40500   |
++---------------+--------+-------+--------+-----------+----------+----------+
+
++---------------+--------+-----------+----------+-----------+
+|    Metric     | Recall | Precision | F1-Score |  Support  |
++---------------+--------+-----------+----------+-----------+
+|  Macro Avg.   | 0.581  |   0.579   |  0.562   | 255488000 |
+| Weighted Avg. | 0.873  |   0.892   |   0.88   | 255488000 |
++---------------+--------+-----------+----------+-----------+
+
+-----------------------------------------------------------------------
+[Image Segmentation][test] done!
+[Image Segmentation][test] elapsed time: 0:00:26.981198
+Running training with cfg/dennis/bdd100k_5090_maxxvitv2_focalce.ini
+[Image Segmentation][main] creating model...
+[BDD100k Dataset][test] creating dataloader...
+[BDD100k Dataset][test] loaded the metadata!
+100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 998/998 [00:00<00:00, 405494.08it/s]
+[BDD100k Dataset][test] found 998 samples!
+[BDD100k Dataset][init] color LUT built with 20 entries.
+[SegmentNet] init...
+[Image Segmentation][main] model summary:
+=============================================================================================================================
+Layer (type:depth-idx)                                                      Output Shape              Param #
+=============================================================================================================================
+SegmentNet                                                                  [1, 20, 400, 640]         --
+├─MaxxViTV2_FPN: 1-1                                                        [1, 128, 112, 112]        --
+│    └─MaxxVit: 2-1                                                         [1, 1024, 7, 7]           --
+│    │    └─Module: 3-1                                                     --                        75,584
+│    │    └─Module: 3-2                                                     --                        114,989,880
+│    └─FeaturePyramidNetwork: 2-2                                           [1, 128, 7, 7]            --
+│    │    └─ModuleList: 3-11                                                --                        (recursive)
+│    │    └─ModuleList: 3-12                                                --                        (recursive)
+│    │    └─ModuleList: 3-11                                                --                        (recursive)
+│    │    └─ModuleList: 3-12                                                --                        (recursive)
+│    │    └─ModuleList: 3-11                                                --                        (recursive)
+│    │    └─ModuleList: 3-12                                                --                        (recursive)
+│    │    └─ModuleList: 3-11                                                --                        (recursive)
+│    │    └─ModuleList: 3-12                                                --                        (recursive)
+│    │    └─ModuleList: 3-11                                                --                        (recursive)
+│    │    └─ModuleList: 3-12                                                --                        (recursive)
+│    └─BatchNorm2d: 2-3                                                     [1, 128, 112, 112]        256
+│    └─GELU: 2-4                                                            [1, 128, 112, 112]        --
+│    └─Dropout2d: 2-5                                                       [1, 128, 112, 112]        --
+├─ClassQueryAttention: 1-2                                                  [1, 128, 112, 112]        4,864
+│    └─Conv2d: 2-6                                                          [1, 32, 112, 112]         4,128
+│    └─Conv2d: 2-7                                                          [1, 32, 112, 112]         4,128
+│    └─Dropout: 2-8                                                         [1, 20, 12544]            --
+├─LightweightTransformerHead: 1-3                                           [1, 20, 400, 640]         512,000
+│    └─Conv2d: 2-9                                                          [1, 32, 112, 112]         4,128
+│    └─AvgPool2d: 2-10                                                      [1, 32, 56, 56]           --
+│    └─TransformerEncoder: 2-11                                             [1, 3136, 32]             --
+│    │    └─ModuleList: 3-13                                                --                        25,408
+│    └─Conv2d: 2-12                                                         [1, 20, 112, 112]         660
+=============================================================================================================================
+Total params: 116,621,740
+Trainable params: 116,621,740
+Non-trainable params: 0
+Total mult-adds (G): 13.32
+=============================================================================================================================
+Input size (MB): 3.07
+Forward/backward pass size (MB): 493.83
+Params size (MB): 463.96
+Estimated Total Size (MB): 960.86
+=============================================================================================================================
+[Image Segmentation][main] testing...
+[Image Segmentation][main] log_dir: /home/lrm/workspace/segment_net/logs/bdd100k_maxxvitv2_query_transformer_focal_cross_entropy_20251013-042714
+[Image Segmentation][main] checkpoint: /home/lrm/workspace/segment_net/logs/bdd100k_maxxvitv2_query_transformer_focal_cross_entropy_20251013-042714/best_model.pth
+run.py:235: FutureWarning: You are using `torch.load` with `weights_only=False` (the current default value), which uses the default pickle module implicitly. It is possible to construct malicious pickle data which will execute arbitrary code during unpickling (See https://github.com/pytorch/pytorch/blob/main/SECURITY.md#untrusted-models for more details). In a future release, the default value for `weights_only` will be flipped to `True`. This limits the functions that could be executed during unpickling. Arbitrary objects will no longer be allowed to be loaded via this mode unless they are explicitly allowlisted by the user via `torch.serialization.add_safe_globals`. We recommend you start setting `weights_only=True` for any use case where you don't have full control of the loaded file. Please open an issue on GitHub for any issues related to this experimental feature.
+  model.load_state_dict(torch.load(checkpoint_path, map_location=device))
+
+100%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 63/63 [00:25<00:00,  2.43it/s]
+------------------------------
+
+Time: 0:00:25.971068
+
+Test   | loss:  1.055 | dice: 0.702 | macro acc: 0.5272 | macro miou: 0.4523 | micro acc: 0.8865 | micro miou: 0.7961 | inf. time: 0.0002 |
+
+-------------------------------- IMAGE --------------------------------
++---------------+--------+-------+--------+-----------+----------+----------+
+|     Class     |  Acc   | mIoU  | Recall | Precision | F1-Score | Support  |
++---------------+--------+-------+--------+-----------+----------+----------+
+|    Unknown    | 80.701 | 0.713 | 0.807  |   0.860   |  0.833   | 34732358 |
+|     Road      | 95.838 | 0.895 | 0.958  |   0.931   |  0.945   | 54946692 |
+|   Sidewalk    | 68.227 | 0.547 | 0.682  |   0.733   |  0.707   | 5234924  |
+|   Building    | 90.042 | 0.780 | 0.900  |   0.853   |  0.876   | 38115406 |
+|     Wall      | 40.243 | 0.320 | 0.402  |   0.609   |  0.485   |  911654  |
+|     Fence     | 45.111 | 0.309 | 0.451  |   0.495   |  0.472   | 2059987  |
+|     Pole      | 15.994 | 0.135 | 0.160  |   0.468   |  0.238   | 2478670  |
+| Traffic Light | 18.515 | 0.161 | 0.185  |   0.558   |  0.278   |  346932  |
+| Traffic Sign  | 25.502 | 0.199 | 0.255  |   0.473   |  0.331   |  590562  |
+|  Vegetation   | 90.694 | 0.805 | 0.907  |   0.878   |  0.892   | 39546334 |
+|    Terrain    | 57.008 | 0.408 | 0.570  |   0.590   |  0.580   | 2329993  |
+|      Sky      | 95.791 | 0.924 | 0.958  |   0.963   |  0.961   | 46050664 |
+|    Person     | 48.299 | 0.389 | 0.483  |   0.667   |  0.560   |  632689  |
+|     Rider     | 10.057 | 0.097 | 0.101  |   0.736   |  0.177   |  25316   |
+|      Car      | 93.536 | 0.830 | 0.935  |   0.880   |  0.907   | 23146469 |
+|     Truck     | 54.783 | 0.453 | 0.548  |   0.723   |  0.623   | 2598471  |
+|      Bus      | 79.789 | 0.685 | 0.798  |   0.829   |  0.813   | 1609724  |
+|     Train     | 0.000  | 0.000 | 0.000  |   0.000   |  0.000   |  30158   |
+|  Motorcycle   | 31.899 | 0.280 | 0.319  |   0.696   |  0.437   |  60497   |
+|    Bicycle    | 12.338 | 0.115 | 0.123  |   0.625   |  0.206   |  40500   |
++---------------+--------+-------+--------+-----------+----------+----------+
+
++---------------+--------+-----------+----------+-----------+
+|    Metric     | Recall | Precision | F1-Score |  Support  |
++---------------+--------+-----------+----------+-----------+
+|  Macro Avg.   | 0.527  |   0.678   |  0.566   | 255488000 |
+| Weighted Avg. | 0.886  |   0.881   |  0.882   | 255488000 |
++---------------+--------+-----------+----------+-----------+
+
+-----------------------------------------------------------------------
+[Image Segmentation][test] done!
+[Image Segmentation][test] elapsed time: 0:00:25.997554
+Running training with cfg/dennis/bdd100k_2080_maxxvitv2_topk.ini
+[Image Segmentation][main] creating model...
+[BDD100k Dataset][test] creating dataloader...
+[BDD100k Dataset][test] loaded the metadata!
+100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 998/998 [00:00<00:00, 408900.60it/s]
+[BDD100k Dataset][test] found 998 samples!
+[BDD100k Dataset][init] color LUT built with 20 entries.
+[SegmentNet] init...
+[Image Segmentation][main] model summary:
+=============================================================================================================================
+Layer (type:depth-idx)                                                      Output Shape              Param #
+=============================================================================================================================
+SegmentNet                                                                  [1, 20, 400, 640]         --
+├─MaxxViTV2_FPN: 1-1                                                        [1, 128, 112, 112]        --
+│    └─MaxxVit: 2-1                                                         [1, 1024, 7, 7]           --
+│    │    └─Module: 3-1                                                     --                        75,584
+│    │    └─Module: 3-2                                                     --                        114,989,880
+│    └─FeaturePyramidNetwork: 2-2                                           [1, 128, 7, 7]            --
+│    │    └─ModuleList: 3-11                                                --                        (recursive)
+│    │    └─ModuleList: 3-12                                                --                        (recursive)
+│    │    └─ModuleList: 3-11                                                --                        (recursive)
+│    │    └─ModuleList: 3-12                                                --                        (recursive)
+│    │    └─ModuleList: 3-11                                                --                        (recursive)
+│    │    └─ModuleList: 3-12                                                --                        (recursive)
+│    │    └─ModuleList: 3-11                                                --                        (recursive)
+│    │    └─ModuleList: 3-12                                                --                        (recursive)
+│    │    └─ModuleList: 3-11                                                --                        (recursive)
+│    │    └─ModuleList: 3-12                                                --                        (recursive)
+│    └─BatchNorm2d: 2-3                                                     [1, 128, 112, 112]        256
+│    └─GELU: 2-4                                                            [1, 128, 112, 112]        --
+│    └─Dropout2d: 2-5                                                       [1, 128, 112, 112]        --
+├─ClassQueryAttention: 1-2                                                  [1, 128, 112, 112]        4,864
+│    └─Conv2d: 2-6                                                          [1, 32, 112, 112]         4,128
+│    └─Conv2d: 2-7                                                          [1, 32, 112, 112]         4,128
+│    └─Dropout: 2-8                                                         [1, 20, 12544]            --
+├─LightweightTransformerHead: 1-3                                           [1, 20, 400, 640]         512,000
+│    └─Conv2d: 2-9                                                          [1, 32, 112, 112]         4,128
+│    └─AvgPool2d: 2-10                                                      [1, 32, 56, 56]           --
+│    └─TransformerEncoder: 2-11                                             [1, 3136, 32]             --
+│    │    └─ModuleList: 3-13                                                --                        25,408
+│    └─Conv2d: 2-12                                                         [1, 20, 112, 112]         660
+=============================================================================================================================
+Total params: 116,621,740
+Trainable params: 116,621,740
+Non-trainable params: 0
+Total mult-adds (G): 13.32
+=============================================================================================================================
+Input size (MB): 3.07
+Forward/backward pass size (MB): 493.83
+Params size (MB): 463.96
+Estimated Total Size (MB): 960.86
+=============================================================================================================================
+[Image Segmentation][main] testing...
+[Image Segmentation][main] log_dir: /home/lrm/workspace/segment_net/logs/bdd100k_maxxvitv2_query_transformer_top_k_20251013-052737
+[Image Segmentation][main] checkpoint: /home/lrm/workspace/segment_net/logs/bdd100k_maxxvitv2_query_transformer_top_k_20251013-052737/best_model.pth
+run.py:235: FutureWarning: You are using `torch.load` with `weights_only=False` (the current default value), which uses the default pickle module implicitly. It is possible to construct malicious pickle data which will execute arbitrary code during unpickling (See https://github.com/pytorch/pytorch/blob/main/SECURITY.md#untrusted-models for more details). In a future release, the default value for `weights_only` will be flipped to `True`. This limits the functions that could be executed during unpickling. Arbitrary objects will no longer be allowed to be loaded via this mode unless they are explicitly allowlisted by the user via `torch.serialization.add_safe_globals`. We recommend you start setting `weights_only=True` for any use case where you don't have full control of the loaded file. Please open an issue on GitHub for any issues related to this experimental feature.
+  model.load_state_dict(torch.load(checkpoint_path, map_location=device))
+
+100%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 63/63 [00:25<00:00,  2.45it/s]
+------------------------------
+
+Time: 0:00:25.809179
+
+Test   | loss:  8.571 | dice: 0.706 | macro acc: 0.5391 | macro miou: 0.4588 | micro acc: 0.8843 | micro miou: 0.7926 | inf. time: 0.0035 |
+
+-------------------------------- IMAGE --------------------------------
++---------------+--------+-------+--------+-----------+----------+----------+
+|     Class     |  Acc   | mIoU  | Recall | Precision | F1-Score | Support  |
++---------------+--------+-------+--------+-----------+----------+----------+
+|    Unknown    | 82.284 | 0.700 | 0.823  |   0.825   |  0.824   | 34732358 |
+|     Road      | 93.509 | 0.885 | 0.935  |   0.943   |  0.939   | 54946692 |
+|   Sidewalk    | 63.230 | 0.528 | 0.632  |   0.761   |  0.691   | 5234924  |
+|   Building    | 90.686 | 0.775 | 0.907  |   0.842   |  0.873   | 38115406 |
+|     Wall      | 30.783 | 0.237 | 0.308  |   0.510   |  0.384   |  911654  |
+|     Fence     | 48.576 | 0.357 | 0.486  |   0.574   |  0.526   | 2059987  |
+|     Pole      | 15.113 | 0.132 | 0.151  |   0.509   |  0.233   | 2478670  |
+| Traffic Light | 28.026 | 0.230 | 0.280  |   0.562   |  0.374   |  346932  |
+| Traffic Sign  | 26.239 | 0.218 | 0.262  |   0.562   |  0.358   |  590562  |
+|  Vegetation   | 89.679 | 0.805 | 0.897  |   0.887   |  0.892   | 39546334 |
+|    Terrain    | 61.895 | 0.409 | 0.619  |   0.547   |  0.581   | 2329993  |
+|      Sky      | 96.450 | 0.925 | 0.964  |   0.957   |  0.961   | 46050664 |
+|    Person     | 52.285 | 0.424 | 0.523  |   0.693   |  0.596   |  632689  |
+|     Rider     | 2.714  | 0.027 | 0.027  |   0.688   |  0.052   |  25316   |
+|      Car      | 92.941 | 0.841 | 0.929  |   0.899   |  0.914   | 23146469 |
+|     Truck     | 65.630 | 0.515 | 0.656  |   0.705   |  0.680   | 2598471  |
+|      Bus      | 79.442 | 0.678 | 0.794  |   0.822   |  0.808   | 1609724  |
+|     Train     | 0.000  | 0.000 | 0.000  |   0.000   |  0.000   |  30158   |
+|  Motorcycle   | 22.664 | 0.212 | 0.227  |   0.769   |  0.350   |  60497   |
+|    Bicycle    | 36.022 | 0.278 | 0.360  |   0.548   |  0.435   |  40500   |
++---------------+--------+-------+--------+-----------+----------+----------+
+
++---------------+--------+-----------+----------+-----------+
+|    Metric     | Recall | Precision | F1-Score |  Support  |
++---------------+--------+-----------+----------+-----------+
+|  Macro Avg.   | 0.539  |   0.68    |  0.573   | 255488000 |
+| Weighted Avg. | 0.884  |   0.88    |  0.881   | 255488000 |
++---------------+--------+-----------+----------+-----------+
+
+-----------------------------------------------------------------------
+[Image Segmentation][test] done!
+[Image Segmentation][test] elapsed time: 0:00:25.835350
+Running training with cfg/dennis/bdd100k_2080_maxxvitv2_iou.ini
+[Image Segmentation][main] creating model...
+[BDD100k Dataset][test] creating dataloader...
+[BDD100k Dataset][test] loaded the metadata!
+100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 998/998 [00:00<00:00, 417464.39it/s]
+[BDD100k Dataset][test] found 998 samples!
+[BDD100k Dataset][init] color LUT built with 20 entries.
+[SegmentNet] init...
+[Image Segmentation][main] model summary:
+=============================================================================================================================
+Layer (type:depth-idx)                                                      Output Shape              Param #
+=============================================================================================================================
+SegmentNet                                                                  [1, 20, 400, 640]         --
+├─MaxxViTV2_FPN: 1-1                                                        [1, 128, 112, 112]        --
+│    └─MaxxVit: 2-1                                                         [1, 1024, 7, 7]           --
+│    │    └─Module: 3-1                                                     --                        75,584
+│    │    └─Module: 3-2                                                     --                        114,989,880
+│    └─FeaturePyramidNetwork: 2-2                                           [1, 128, 7, 7]            --
+│    │    └─ModuleList: 3-11                                                --                        (recursive)
+│    │    └─ModuleList: 3-12                                                --                        (recursive)
+│    │    └─ModuleList: 3-11                                                --                        (recursive)
+│    │    └─ModuleList: 3-12                                                --                        (recursive)
+│    │    └─ModuleList: 3-11                                                --                        (recursive)
+│    │    └─ModuleList: 3-12                                                --                        (recursive)
+│    │    └─ModuleList: 3-11                                                --                        (recursive)
+│    │    └─ModuleList: 3-12                                                --                        (recursive)
+│    │    └─ModuleList: 3-11                                                --                        (recursive)
+│    │    └─ModuleList: 3-12                                                --                        (recursive)
+│    └─BatchNorm2d: 2-3                                                     [1, 128, 112, 112]        256
+│    └─GELU: 2-4                                                            [1, 128, 112, 112]        --
+│    └─Dropout2d: 2-5                                                       [1, 128, 112, 112]        --
+├─ClassQueryAttention: 1-2                                                  [1, 128, 112, 112]        4,864
+│    └─Conv2d: 2-6                                                          [1, 32, 112, 112]         4,128
+│    └─Conv2d: 2-7                                                          [1, 32, 112, 112]         4,128
+│    └─Dropout: 2-8                                                         [1, 20, 12544]            --
+├─LightweightTransformerHead: 1-3                                           [1, 20, 400, 640]         512,000
+│    └─Conv2d: 2-9                                                          [1, 32, 112, 112]         4,128
+│    └─AvgPool2d: 2-10                                                      [1, 32, 56, 56]           --
+│    └─TransformerEncoder: 2-11                                             [1, 3136, 32]             --
+│    │    └─ModuleList: 3-13                                                --                        25,408
+│    └─Conv2d: 2-12                                                         [1, 20, 112, 112]         660
+=============================================================================================================================
+Total params: 116,621,740
+Trainable params: 116,621,740
+Non-trainable params: 0
+Total mult-adds (G): 13.32
+=============================================================================================================================
+Input size (MB): 3.07
+Forward/backward pass size (MB): 493.83
+Params size (MB): 463.96
+Estimated Total Size (MB): 960.86
+=============================================================================================================================
+[Image Segmentation][main] testing...
+[Image Segmentation][main] log_dir: /home/lrm/workspace/segment_net/logs/bdd100k_maxxvitv2_query_transformer_jaccard_iou_20251013-062818
+[Image Segmentation][main] checkpoint: /home/lrm/workspace/segment_net/logs/bdd100k_maxxvitv2_query_transformer_jaccard_iou_20251013-062818/best_model.pth
+run.py:235: FutureWarning: You are using `torch.load` with `weights_only=False` (the current default value), which uses the default pickle module implicitly. It is possible to construct malicious pickle data which will execute arbitrary code during unpickling (See https://github.com/pytorch/pytorch/blob/main/SECURITY.md#untrusted-models for more details). In a future release, the default value for `weights_only` will be flipped to `True`. This limits the functions that could be executed during unpickling. Arbitrary objects will no longer be allowed to be loaded via this mode unless they are explicitly allowlisted by the user via `torch.serialization.add_safe_globals`. We recommend you start setting `weights_only=True` for any use case where you don't have full control of the loaded file. Please open an issue on GitHub for any issues related to this experimental feature.
+  model.load_state_dict(torch.load(checkpoint_path, map_location=device))
+
+100%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 63/63 [00:26<00:00,  2.40it/s]
+------------------------------
+
+Time: 0:00:26.268731
+
+Test   | loss:  4.770 | dice: 0.704 | macro acc: 0.4975 | macro miou: 0.4305 | micro acc: 0.8878 | micro miou: 0.7982 | inf. time: 0.0035 |
+
+-------------------------------- IMAGE --------------------------------
++---------------+--------+-------+--------+-----------+----------+----------+
+|     Class     |  Acc   | mIoU  | Recall | Precision | F1-Score | Support  |
++---------------+--------+-------+--------+-----------+----------+----------+
+|    Unknown    | 81.859 | 0.703 | 0.819  |   0.833   |  0.826   | 34732358 |
+|     Road      | 95.942 | 0.903 | 0.959  |   0.939   |  0.949   | 54946692 |
+|   Sidewalk    | 70.105 | 0.572 | 0.701  |   0.756   |  0.728   | 5234924  |
+|   Building    | 91.241 | 0.773 | 0.912  |   0.836   |  0.872   | 38115406 |
+|     Wall      | 0.000  | 0.000 | 0.000  |   0.000   |  0.000   |  911654  |
+|     Fence     | 40.082 | 0.315 | 0.401  |   0.595   |  0.479   | 2059987  |
+|     Pole      | 0.000  | 0.000 | 0.000  |   0.000   |  0.000   | 2478670  |
+| Traffic Light | 44.342 | 0.360 | 0.443  |   0.656   |  0.529   |  346932  |
+| Traffic Sign  | 37.923 | 0.289 | 0.379  |   0.547   |  0.448   |  590562  |
+|  Vegetation   | 90.971 | 0.805 | 0.910  |   0.875   |  0.892   | 39546334 |
+|    Terrain    | 51.480 | 0.407 | 0.515  |   0.659   |  0.578   | 2329993  |
+|      Sky      | 95.941 | 0.923 | 0.959  |   0.960   |  0.960   | 46050664 |
+|    Person     | 61.232 | 0.516 | 0.612  |   0.766   |  0.680   |  632689  |
+|     Rider     | 0.000  | 0.000 | 0.000  |   0.000   |  0.000   |  25316   |
+|      Car      | 92.669 | 0.846 | 0.927  |   0.907   |  0.917   | 23146469 |
+|     Truck     | 55.520 | 0.479 | 0.555  |   0.776   |  0.647   | 2598471  |
+|      Bus      | 85.619 | 0.720 | 0.856  |   0.819   |  0.837   | 1609724  |
+|     Train     | 0.000  | 0.000 | 0.000  |   0.000   |  0.000   |  30158   |
+|  Motorcycle   | 0.000  | 0.000 | 0.000  |   0.000   |  0.000   |  60497   |
+|    Bicycle    | 0.000  | 0.000 | 0.000  |   0.000   |  0.000   |  40500   |
++---------------+--------+-------+--------+-----------+----------+----------+
+
++---------------+--------+-----------+----------+-----------+
+|    Metric     | Recall | Precision | F1-Score |  Support  |
++---------------+--------+-----------+----------+-----------+
+|  Macro Avg.   | 0.497  |   0.546   |  0.517   | 255488000 |
+| Weighted Avg. | 0.888  |   0.874   |   0.88   | 255488000 |
++---------------+--------+-----------+----------+-----------+
+
+-----------------------------------------------------------------------
+[Image Segmentation][test] done!
+[Image Segmentation][test] elapsed time: 0:00:26.332668
+Running training with cfg/dennis/bdd100k_2080_maxxvitv2_focaltversky.ini
+[Image Segmentation][main] creating model...
+[BDD100k Dataset][test] creating dataloader...
+[BDD100k Dataset][test] loaded the metadata!
+100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 998/998 [00:00<00:00, 401141.87it/s]
+[BDD100k Dataset][test] found 998 samples!
+[BDD100k Dataset][init] color LUT built with 20 entries.
+[SegmentNet] init...
+[Image Segmentation][main] model summary:
+=============================================================================================================================
+Layer (type:depth-idx)                                                      Output Shape              Param #
+=============================================================================================================================
+SegmentNet                                                                  [1, 20, 400, 640]         --
+├─MaxxViTV2_FPN: 1-1                                                        [1, 128, 112, 112]        --
+│    └─MaxxVit: 2-1                                                         [1, 1024, 7, 7]           --
+│    │    └─Module: 3-1                                                     --                        75,584
+│    │    └─Module: 3-2                                                     --                        114,989,880
+│    └─FeaturePyramidNetwork: 2-2                                           [1, 128, 7, 7]            --
+│    │    └─ModuleList: 3-11                                                --                        (recursive)
+│    │    └─ModuleList: 3-12                                                --                        (recursive)
+│    │    └─ModuleList: 3-11                                                --                        (recursive)
+│    │    └─ModuleList: 3-12                                                --                        (recursive)
+│    │    └─ModuleList: 3-11                                                --                        (recursive)
+│    │    └─ModuleList: 3-12                                                --                        (recursive)
+│    │    └─ModuleList: 3-11                                                --                        (recursive)
+│    │    └─ModuleList: 3-12                                                --                        (recursive)
+│    │    └─ModuleList: 3-11                                                --                        (recursive)
+│    │    └─ModuleList: 3-12                                                --                        (recursive)
+│    └─BatchNorm2d: 2-3                                                     [1, 128, 112, 112]        256
+│    └─GELU: 2-4                                                            [1, 128, 112, 112]        --
+│    └─Dropout2d: 2-5                                                       [1, 128, 112, 112]        --
+├─ClassQueryAttention: 1-2                                                  [1, 128, 112, 112]        4,864
+│    └─Conv2d: 2-6                                                          [1, 32, 112, 112]         4,128
+│    └─Conv2d: 2-7                                                          [1, 32, 112, 112]         4,128
+│    └─Dropout: 2-8                                                         [1, 20, 12544]            --
+├─LightweightTransformerHead: 1-3                                           [1, 20, 400, 640]         512,000
+│    └─Conv2d: 2-9                                                          [1, 32, 112, 112]         4,128
+│    └─AvgPool2d: 2-10                                                      [1, 32, 56, 56]           --
+│    └─TransformerEncoder: 2-11                                             [1, 3136, 32]             --
+│    │    └─ModuleList: 3-13                                                --                        25,408
+│    └─Conv2d: 2-12                                                         [1, 20, 112, 112]         660
+=============================================================================================================================
+Total params: 116,621,740
+Trainable params: 116,621,740
+Non-trainable params: 0
+Total mult-adds (G): 13.32
+=============================================================================================================================
+Input size (MB): 3.07
+Forward/backward pass size (MB): 493.83
+Params size (MB): 463.96
+Estimated Total Size (MB): 960.86
+=============================================================================================================================
+[Image Segmentation][main] testing...
+[Image Segmentation][main] log_dir: /home/lrm/workspace/segment_net/logs/bdd100k_maxxvitv2_query_transformer_focal_tversky_20251013-091011
+[Image Segmentation][main] checkpoint: /home/lrm/workspace/segment_net/logs/bdd100k_maxxvitv2_query_transformer_focal_tversky_20251013-091011/best_model.pth
+run.py:235: FutureWarning: You are using `torch.load` with `weights_only=False` (the current default value), which uses the default pickle module implicitly. It is possible to construct malicious pickle data which will execute arbitrary code during unpickling (See https://github.com/pytorch/pytorch/blob/main/SECURITY.md#untrusted-models for more details). In a future release, the default value for `weights_only` will be flipped to `True`. This limits the functions that could be executed during unpickling. Arbitrary objects will no longer be allowed to be loaded via this mode unless they are explicitly allowlisted by the user via `torch.serialization.add_safe_globals`. We recommend you start setting `weights_only=True` for any use case where you don't have full control of the loaded file. Please open an issue on GitHub for any issues related to this experimental feature.
+  model.load_state_dict(torch.load(checkpoint_path, map_location=device))
+
+100%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 63/63 [00:26<00:00,  2.37it/s]
+------------------------------
+
+Time: 0:00:26.564932
+
+Test   | loss:  2.999 | dice: 0.699 | macro acc: 0.5414 | macro miou: 0.4728 | micro acc: 0.8800 | micro miou: 0.7857 | inf. time: 0.0035 |
+
+-------------------------------- IMAGE --------------------------------
++---------------+--------+-------+--------+-----------+----------+----------+
+|     Class     |  Acc   | mIoU  | Recall | Precision | F1-Score | Support  |
++---------------+--------+-------+--------+-----------+----------+----------+
+|    Unknown    | 80.434 | 0.704 | 0.804  |   0.850   |  0.826   | 34732358 |
+|     Road      | 95.292 | 0.885 | 0.953  |   0.926   |  0.939   | 54946692 |
+|   Sidewalk    | 66.761 | 0.548 | 0.668  |   0.753   |  0.708   | 5234924  |
+|   Building    | 89.559 | 0.754 | 0.896  |   0.827   |  0.860   | 38115406 |
+|     Wall      | 35.297 | 0.284 | 0.353  |   0.594   |  0.443   |  911654  |
+|     Fence     | 34.005 | 0.266 | 0.340  |   0.549   |  0.420   | 2059987  |
+|     Pole      | 35.832 | 0.271 | 0.358  |   0.527   |  0.426   | 2478670  |
+| Traffic Light | 42.201 | 0.356 | 0.422  |   0.696   |  0.525   |  346932  |
+| Traffic Sign  | 31.104 | 0.267 | 0.311  |   0.652   |  0.421   |  590562  |
+|  Vegetation   | 88.257 | 0.791 | 0.883  |   0.885   |  0.884   | 39546334 |
+|    Terrain    | 50.879 | 0.407 | 0.509  |   0.672   |  0.579   | 2329993  |
+|      Sky      | 96.180 | 0.902 | 0.962  |   0.936   |  0.949   | 46050664 |
+|    Person     | 57.780 | 0.492 | 0.578  |   0.768   |  0.659   |  632689  |
+|     Rider     | 25.217 | 0.225 | 0.252  |   0.678   |  0.368   |  25316   |
+|      Car      | 92.655 | 0.830 | 0.927  |   0.889   |  0.907   | 23146469 |
+|     Truck     | 49.097 | 0.431 | 0.491  |   0.778   |  0.602   | 2598471  |
+|      Bus      | 72.257 | 0.678 | 0.723  |   0.916   |  0.808   | 1609724  |
+|     Train     | 0.000  | 0.000 | 0.000  |   0.000   |  0.000   |  30158   |
+|  Motorcycle   | 17.710 | 0.172 | 0.177  |   0.849   |  0.293   |  60497   |
+|    Bicycle    | 22.356 | 0.191 | 0.224  |   0.571   |  0.321   |  40500   |
++---------------+--------+-------+--------+-----------+----------+----------+
+
++---------------+--------+-----------+----------+-----------+
+|    Metric     | Recall | Precision | F1-Score |  Support  |
++---------------+--------+-----------+----------+-----------+
+|  Macro Avg.   | 0.541  |   0.716   |  0.597   | 255488000 |
+| Weighted Avg. |  0.88  |   0.876   |  0.876   | 255488000 |
++---------------+--------+-----------+----------+-----------+
+
+-----------------------------------------------------------------------
+[Image Segmentation][test] done!
+[Image Segmentation][test] elapsed time: 0:00:26.623561
+Running training with cfg/dennis/bdd100k_1080_maxxvitv2_logcoshdice.ini
+[Image Segmentation][main] creating model...
+[BDD100k Dataset][test] creating dataloader...
+[BDD100k Dataset][test] loaded the metadata!
+100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 998/998 [00:00<00:00, 397409.61it/s]
+[BDD100k Dataset][test] found 998 samples!
+[BDD100k Dataset][init] color LUT built with 20 entries.
+[SegmentNet] init...
+[Image Segmentation][main] model summary:
+=============================================================================================================================
+Layer (type:depth-idx)                                                      Output Shape              Param #
+=============================================================================================================================
+SegmentNet                                                                  [1, 20, 400, 640]         --
+├─MaxxViTV2_FPN: 1-1                                                        [1, 128, 112, 112]        --
+│    └─MaxxVit: 2-1                                                         [1, 1024, 7, 7]           --
+│    │    └─Module: 3-1                                                     --                        75,584
+│    │    └─Module: 3-2                                                     --                        114,989,880
+│    └─FeaturePyramidNetwork: 2-2                                           [1, 128, 7, 7]            --
+│    │    └─ModuleList: 3-11                                                --                        (recursive)
+│    │    └─ModuleList: 3-12                                                --                        (recursive)
+│    │    └─ModuleList: 3-11                                                --                        (recursive)
+│    │    └─ModuleList: 3-12                                                --                        (recursive)
+│    │    └─ModuleList: 3-11                                                --                        (recursive)
+│    │    └─ModuleList: 3-12                                                --                        (recursive)
+│    │    └─ModuleList: 3-11                                                --                        (recursive)
+│    │    └─ModuleList: 3-12                                                --                        (recursive)
+│    │    └─ModuleList: 3-11                                                --                        (recursive)
+│    │    └─ModuleList: 3-12                                                --                        (recursive)
+│    └─BatchNorm2d: 2-3                                                     [1, 128, 112, 112]        256
+│    └─GELU: 2-4                                                            [1, 128, 112, 112]        --
+│    └─Dropout2d: 2-5                                                       [1, 128, 112, 112]        --
+├─ClassQueryAttention: 1-2                                                  [1, 128, 112, 112]        4,864
+│    └─Conv2d: 2-6                                                          [1, 32, 112, 112]         4,128
+│    └─Conv2d: 2-7                                                          [1, 32, 112, 112]         4,128
+│    └─Dropout: 2-8                                                         [1, 20, 12544]            --
+├─LightweightTransformerHead: 1-3                                           [1, 20, 400, 640]         512,000
+│    └─Conv2d: 2-9                                                          [1, 32, 112, 112]         4,128
+│    └─AvgPool2d: 2-10                                                      [1, 32, 56, 56]           --
+│    └─TransformerEncoder: 2-11                                             [1, 3136, 32]             --
+│    │    └─ModuleList: 3-13                                                --                        25,408
+│    └─Conv2d: 2-12                                                         [1, 20, 112, 112]         660
+=============================================================================================================================
+Total params: 116,621,740
+Trainable params: 116,621,740
+Non-trainable params: 0
+Total mult-adds (G): 13.32
+=============================================================================================================================
+Input size (MB): 3.07
+Forward/backward pass size (MB): 493.83
+Params size (MB): 463.96
+Estimated Total Size (MB): 960.86
+=============================================================================================================================
+[Image Segmentation][main] testing...
+[Image Segmentation][main] log_dir: /home/lrm/workspace/segment_net/logs/bdd100k_maxxvitv2_query_transformer_log_cosh_dice_20251013-114243
+[Image Segmentation][main] checkpoint: /home/lrm/workspace/segment_net/logs/bdd100k_maxxvitv2_query_transformer_log_cosh_dice_20251013-114243/best_model.pth
+run.py:235: FutureWarning: You are using `torch.load` with `weights_only=False` (the current default value), which uses the default pickle module implicitly. It is possible to construct malicious pickle data which will execute arbitrary code during unpickling (See https://github.com/pytorch/pytorch/blob/main/SECURITY.md#untrusted-models for more details). In a future release, the default value for `weights_only` will be flipped to `True`. This limits the functions that could be executed during unpickling. Arbitrary objects will no longer be allowed to be loaded via this mode unless they are explicitly allowlisted by the user via `torch.serialization.add_safe_globals`. We recommend you start setting `weights_only=True` for any use case where you don't have full control of the loaded file. Please open an issue on GitHub for any issues related to this experimental feature.
+  model.load_state_dict(torch.load(checkpoint_path, map_location=device))
+
+100%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 63/63 [00:26<00:00,  2.42it/s]
+------------------------------
+
+Time: 0:00:26.051761
+
+Test   | loss:  2.680 | dice: 0.666 | macro acc: 0.6006 | macro miou: 0.4733 | micro acc: 0.8808 | micro miou: 0.7871 | inf. time: 0.0000 |
+
+-------------------------------- IMAGE --------------------------------
++---------------+--------+-------+--------+-----------+----------+----------+
+|     Class     |  Acc   | mIoU  | Recall | Precision | F1-Score | Support  |
++---------------+--------+-------+--------+-----------+----------+----------+
+|    Unknown    | 79.666 | 0.707 | 0.797  |   0.863   |  0.828   | 34732358 |
+|     Road      | 94.795 | 0.892 | 0.948  |   0.938   |  0.943   | 54946692 |
+|   Sidewalk    | 71.588 | 0.527 | 0.716  |   0.666   |  0.690   | 5234924  |
+|   Building    | 88.899 | 0.764 | 0.889  |   0.845   |  0.866   | 38115406 |
+|     Wall      | 44.295 | 0.249 | 0.443  |   0.363   |  0.399   |  911654  |
+|     Fence     | 45.024 | 0.276 | 0.450  |   0.416   |  0.433   | 2059987  |
+|     Pole      | 46.723 | 0.310 | 0.467  |   0.478   |  0.473   | 2478670  |
+| Traffic Light | 45.426 | 0.343 | 0.454  |   0.582   |  0.510   |  346932  |
+| Traffic Sign  | 44.883 | 0.300 | 0.449  |   0.476   |  0.462   |  590562  |
+|  Vegetation   | 88.241 | 0.800 | 0.882  |   0.896   |  0.889   | 39546334 |
+|    Terrain    | 59.332 | 0.417 | 0.593  |   0.583   |  0.588   | 2329993  |
+|      Sky      | 95.438 | 0.917 | 0.954  |   0.960   |  0.957   | 46050664 |
+|    Person     | 61.817 | 0.466 | 0.618  |   0.655   |  0.636   |  632689  |
+|     Rider     | 31.932 | 0.127 | 0.319  |   0.173   |  0.225   |  25316   |
+|      Car      | 92.792 | 0.836 | 0.928  |   0.894   |  0.911   | 23146469 |
+|     Truck     | 59.981 | 0.448 | 0.600  |   0.639   |  0.619   | 2598471  |
+|      Bus      | 64.246 | 0.572 | 0.642  |   0.840   |  0.728   | 1609724  |
+|     Train     | 0.000  | 0.000 | 0.000  |   0.000   |  0.000   |  30158   |
+|  Motorcycle   | 49.624 | 0.285 | 0.496  |   0.401   |  0.444   |  60497   |
+|    Bicycle    | 36.501 | 0.230 | 0.365  |   0.382   |  0.373   |  40500   |
++---------------+--------+-------+--------+-----------+----------+----------+
+
++---------------+--------+-----------+----------+-----------+
+|    Metric     | Recall | Precision | F1-Score |  Support  |
++---------------+--------+-----------+----------+-----------+
+|  Macro Avg.   | 0.601  |   0.603   |  0.599   | 255488000 |
+| Weighted Avg. | 0.881  |   0.881   |  0.881   | 255488000 |
++---------------+--------+-----------+----------+-----------+
+
+-----------------------------------------------------------------------
+[Image Segmentation][test] done!
+[Image Segmentation][test] elapsed time: 0:00:26.119475
+Running training with cfg/dennis/bdd100k_1080_maxxvitv2_dice
+[Image Segmentation][main] creating model...
+Traceback (most recent call last):
+  File "run.py", line 255, in <module>
+    raise FileNotFoundError(("config file not found!"
+FileNotFoundError: config file not found!(cfg:cfg/dennis/bdd100k_1080_maxxvitv2_dice)
+Error while running cfg/dennis/bdd100k_1080_maxxvitv2_dice. Interrruptiong the sequence.
+(pytorch-env) lrm@lrm-4090:~/workspace/segment_net$ python run.py --cfg /home/lrm/workspace/segment_net/cfg/dennis/bdd100k_1080_maxxvitv2_dice.ini
+[Image Segmentation][main] creating model...
+[BDD100k Dataset][test] creating dataloader...
+[BDD100k Dataset][test] loaded the metadata!
+100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 998/998 [00:00<00:00, 401565.18it/s]
+[BDD100k Dataset][test] found 998 samples!
+[BDD100k Dataset][init] color LUT built with 20 entries.
+[SegmentNet] init...
+[Image Segmentation][main] model summary:
+=============================================================================================================================
+Layer (type:depth-idx)                                                      Output Shape              Param #
+=============================================================================================================================
+SegmentNet                                                                  [1, 20, 400, 640]         --
+├─MaxxViTV2_FPN: 1-1                                                        [1, 128, 112, 112]        --
+│    └─MaxxVit: 2-1                                                         [1, 1024, 7, 7]           --
+│    │    └─Module: 3-1                                                     --                        75,584
+│    │    └─Module: 3-2                                                     --                        114,989,880
+│    └─FeaturePyramidNetwork: 2-2                                           [1, 128, 7, 7]            --
+│    │    └─ModuleList: 3-11                                                --                        (recursive)
+│    │    └─ModuleList: 3-12                                                --                        (recursive)
+│    │    └─ModuleList: 3-11                                                --                        (recursive)
+│    │    └─ModuleList: 3-12                                                --                        (recursive)
+│    │    └─ModuleList: 3-11                                                --                        (recursive)
+│    │    └─ModuleList: 3-12                                                --                        (recursive)
+│    │    └─ModuleList: 3-11                                                --                        (recursive)
+│    │    └─ModuleList: 3-12                                                --                        (recursive)
+│    │    └─ModuleList: 3-11                                                --                        (recursive)
+│    │    └─ModuleList: 3-12                                                --                        (recursive)
+│    └─BatchNorm2d: 2-3                                                     [1, 128, 112, 112]        256
+│    └─GELU: 2-4                                                            [1, 128, 112, 112]        --
+│    └─Dropout2d: 2-5                                                       [1, 128, 112, 112]        --
+├─ClassQueryAttention: 1-2                                                  [1, 128, 112, 112]        4,864
+│    └─Conv2d: 2-6                                                          [1, 32, 112, 112]         4,128
+│    └─Conv2d: 2-7                                                          [1, 32, 112, 112]         4,128
+│    └─Dropout: 2-8                                                         [1, 20, 12544]            --
+├─LightweightTransformerHead: 1-3                                           [1, 20, 400, 640]         512,000
+│    └─Conv2d: 2-9                                                          [1, 32, 112, 112]         4,128
+│    └─AvgPool2d: 2-10                                                      [1, 32, 56, 56]           --
+│    └─TransformerEncoder: 2-11                                             [1, 3136, 32]             --
+│    │    └─ModuleList: 3-13                                                --                        25,408
+│    └─Conv2d: 2-12                                                         [1, 20, 112, 112]         660
+=============================================================================================================================
+Total params: 116,621,740
+Trainable params: 116,621,740
+Non-trainable params: 0
+Total mult-adds (G): 13.32
+=============================================================================================================================
+Input size (MB): 3.07
+Forward/backward pass size (MB): 493.83
+Params size (MB): 463.96
+Estimated Total Size (MB): 960.86
+=============================================================================================================================
+[Image Segmentation][main] testing...
+[Image Segmentation][main] log_dir: /home/lrm/workspace/segment_net/logs/bdd100k_maxxvitv2_query_transformer_dice_20251013-150616
+[Image Segmentation][main] checkpoint: /home/lrm/workspace/segment_net/logs/bdd100k_maxxvitv2_query_transformer_dice_20251013-150616/best_model.pth
+run.py:235: FutureWarning: You are using `torch.load` with `weights_only=False` (the current default value), which uses the default pickle module implicitly. It is possible to construct malicious pickle data which will execute arbitrary code during unpickling (See https://github.com/pytorch/pytorch/blob/main/SECURITY.md#untrusted-models for more details). In a future release, the default value for `weights_only` will be flipped to `True`. This limits the functions that could be executed during unpickling. Arbitrary objects will no longer be allowed to be loaded via this mode unless they are explicitly allowlisted by the user via `torch.serialization.add_safe_globals`. We recommend you start setting `weights_only=True` for any use case where you don't have full control of the loaded file. Please open an issue on GitHub for any issues related to this experimental feature.
+  model.load_state_dict(torch.load(checkpoint_path, map_location=device))
+
+100%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 63/63 [00:26<00:00,  2.37it/s]
+------------------------------
+
+Time: 0:00:26.628706
+
+Test   | loss:  6.542 | dice: 0.654 | macro acc: 0.6305 | macro miou: 0.4928 | micro acc: 0.8869 | micro miou: 0.7968 | inf. time: 0.0036 |
+
+-------------------------------- IMAGE --------------------------------
++---------------+--------+-------+--------+-----------+----------+----------+
+|     Class     |  Acc   | mIoU  | Recall | Precision | F1-Score | Support  |
++---------------+--------+-------+--------+-----------+----------+----------+
+|    Unknown    | 80.439 | 0.716 | 0.804  |   0.867   |  0.834   | 34732358 |
+|     Road      | 95.015 | 0.903 | 0.950  |   0.948   |  0.949   | 54946692 |
+|   Sidewalk    | 72.929 | 0.550 | 0.729  |   0.691   |  0.709   | 5234924  |
+|   Building    | 88.887 | 0.778 | 0.889  |   0.862   |  0.875   | 38115406 |
+|     Wall      | 45.125 | 0.290 | 0.451  |   0.447   |  0.449   |  911654  |
+|     Fence     | 47.665 | 0.308 | 0.477  |   0.466   |  0.471   | 2059987  |
+|     Pole      | 52.001 | 0.297 | 0.520  |   0.410   |  0.458   | 2478670  |
+| Traffic Light | 57.731 | 0.361 | 0.577  |   0.491   |  0.531   |  346932  |
+| Traffic Sign  | 47.921 | 0.297 | 0.479  |   0.438   |  0.458   |  590562  |
+|  Vegetation   | 88.463 | 0.807 | 0.885  |   0.903   |  0.893   | 39546334 |
+|    Terrain    | 63.042 | 0.417 | 0.630  |   0.552   |  0.589   | 2329993  |
+|      Sky      | 95.737 | 0.924 | 0.957  |   0.964   |  0.961   | 46050664 |
+|    Person     | 67.796 | 0.487 | 0.678  |   0.634   |  0.655   |  632689  |
+|     Rider     | 30.068 | 0.181 | 0.301  |   0.314   |  0.307   |  25316   |
+|      Car      | 93.318 | 0.848 | 0.933  |   0.903   |  0.918   | 23146469 |
+|     Truck     | 61.036 | 0.476 | 0.610  |   0.683   |  0.645   | 2598471  |
+|      Bus      | 85.912 | 0.648 | 0.859  |   0.725   |  0.787   | 1609724  |
+|     Train     | 0.000  | 0.000 | 0.000  |   0.000   |  0.000   |  30158   |
+|  Motorcycle   | 52.335 | 0.330 | 0.523  |   0.471   |  0.496   |  60497   |
+|    Bicycle    | 35.553 | 0.236 | 0.356  |   0.413   |  0.382   |  40500   |
++---------------+--------+-------+--------+-----------+----------+----------+
+
++---------------+--------+-----------+----------+-----------+
+|    Metric     | Recall | Precision | F1-Score |  Support  |
++---------------+--------+-----------+----------+-----------+
+|  Macro Avg.   |  0.63  |   0.609   |  0.618   | 255488000 |
+| Weighted Avg. | 0.887  |   0.889   |  0.888   | 255488000 |
++---------------+--------+-----------+----------+-----------+
+
+-----------------------------------------------------------------------
+[Image Segmentation][test] done!
+[Image Segmentation][test] elapsed time: 0:00:26.673167

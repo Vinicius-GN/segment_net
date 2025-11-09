@@ -6,7 +6,7 @@ import torchvision.models as models
 from torchvision.ops import FeaturePyramidNetwork
 from torchvision.models.feature_extraction import create_feature_extractor
 
-from .base import BaseBackbone
+from ..aggregation.base import BaseBackbone
 
 class EfficientNetB0_FPN(BaseBackbone):
 

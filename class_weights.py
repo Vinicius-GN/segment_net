@@ -29,9 +29,9 @@ with warnings.catch_warnings():
     from albumentations.pytorch import ToTensorV2
 
 from utils.utils import split_config
-from utils.color import printH
-from utils.tables import print_class_distribution_table
-from utils.dataloaders import get_dataset
+from utils.preprocessing.color import printH
+from utils.debug.tables import print_class_distribution_table
+from utils.dataloaders.dataloader import get_dataset
 
 def parse_arguments():
 	parser = argparse.ArgumentParser()
