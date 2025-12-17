@@ -69,7 +69,7 @@ class SegFormerB2_FPN(BaseBackbone):
         x = self.activation(x)
         x = self.dropout(x)
         return x
-
+    
 
 class SegFormerB3_FPN(BaseBackbone):
     def __init__(self, config):

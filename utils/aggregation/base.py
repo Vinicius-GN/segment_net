@@ -22,6 +22,7 @@ class BaseBackbone(nn.Module):
         self.config = config
         self.aggregate_fn = self.config.get("backbone").get("aggregate")
         self.layer_weights = self.config.get("backbone").get("layer_weights")
+
         self.fpn_channels =  self.config.get("backbone").get("fpn_out_channels")              
         self.num_feature_layers = num_feature_layers
         
@@ -51,6 +52,8 @@ class BaseBackbone(nn.Module):
             self.aspp = ASPPFusion(self.fpn_channels, self.fpn_channels, self.num_feature_layers, rates=rates, norm=norm_type, act=act_type, separable=separable, dropout=dropout)
 
         batch_channels = self.fpn_channels
+        
+
         if self.aggregate_fn == "concat":
             batch_channels = batch_channels*num_feature_layers
 

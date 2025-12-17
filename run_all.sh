@@ -1,19 +1,41 @@
 #!/bin/bash
 
 configs=(
-    #"cfg/CROS_Experiments/Segformerb2/goose_4090_segformerb2_deeplabhead_DANet.ini"
-    #"cfg/CROS_Experiments/Segformerb2/goose_4090_segformerb2_deeplabhead_Efficientvit.ini"
-    #"cfg/CROS_Experiments/Segformerb2/goose_4090_segformerb2_deeplabhead_OCR.ini"
-    #"cfg/CROS_Experiments/Segformerb2/goose_4090_segformerb2_deeplabhead_PSA_par.ini"
-    #"cfg/CROS_Experiments/Segformerb2/goose_4090_segformerb2_deeplabhead_PSAseq.ini"
-    #"cfg/CROS_Experiments/Segformerb2/goose_4090_segformerb2_deeplabhead_PVT-Linear.ini"
-    #"cfg/CROS_Experiments/Segformerb2/goose_4090_segformerb2_deeplabhead_PVT-SRA.ini"
-    #"cfg/CROS_Experiments/Segformerb2/goose_4090_segformerb2_deeplabhead_query.ini"
-    #"cfg/CROS_Experiments/Segformerb2/goose_4090_segformerb2_deeplabhead_spatial.ini"
+    # "cfg/CROS_Experiments/Resnet18_Dec/goose_4090_resnet18_segformerhead_Efficientvit.ini" 
+    # "cfg/CROS_Experiments/Resnet18_Dec/goose_4090_resnet18_segformerhead_none.ini" 
+    # "cfg/CROS_Experiments/Resnet18_Dec/goose_4090_resnet18_segformerhead_PVT-SRA.ini" 
+    # "cfg/CROS_Experiments/Resnet18_Dec/goose_4090_resnet18_segformerhead_query.ini" 
+    # "cfg/CROS_Experiments/Resnet18_Dec/goose_4090_resnet18_segformerhead_se_channel.ini"
+    # "cfg/CROS_Experiments/Resnet18_Dec/goose_4090_resnet18_segformerhead_DANet.ini" 
 
-    #"cfg/CROS_Experiments/Segformerb2/goose_4090_segformerb2_deeplabhead_none.ini"
-    "cfg/CROS_Experiments/Segformerb2/goose_4090_segformerb2_deeplabhead_class_channel.ini"
-    "cfg/CROS_Experiments/Segformerb2/goose_4090_segformerb2_deeplabhead_se_channel.ini"
+    "cfg/CROS_Experiments/bdd100k/Segformerb2/bdd100k_5090_segformer_segformerhead_DANet.ini" 
+    "cfg/CROS_Experiments/bdd100k/Segformerb2/bdd100k_5090_segformer_segformerhead_Efficientvit.ini" 
+    "cfg/CROS_Experiments/bdd100k/Segformerb2/bdd100k_5090_segformer_segformerhead_none.ini" 
+    "cfg/CROS_Experiments/bdd100k/Segformerb2/bdd100k_5090_segformer_segformerhead_PVT-SRA.ini" 
+    "cfg/CROS_Experiments/bdd100k/Segformerb2/bdd100k_5090_segformer_segformerhead_query.ini" 
+    "cfg/CROS_Experiments/bdd100k/Segformerb2/bdd100k_5090_segformer_segformerhead_se_channel.ini"
+
+    "cfg/CROS_Experiments/bdd100k/Resnet18/bdd100k_5090_resnet_segformerhead_DANet.ini" 
+    "cfg/CROS_Experiments/bdd100k/Resnet18/bdd100k_5090_resnet_segformerhead_Efficientvit.ini" 
+    "cfg/CROS_Experiments/bdd100k/Resnet18/bdd100k_5090_resnet_segformerhead_none.ini" 
+    "cfg/CROS_Experiments/bdd100k/Resnet18/bdd100k_5090_resnet_segformerhead_PVT-SRA.ini" 
+    "cfg/CROS_Experiments/bdd100k/Resnet18/bdd100k_5090_resnet_segformerhead_query.ini" 
+    "cfg/CROS_Experiments/bdd100k/Resnet18/bdd100k_5090_resnet_segformerhead_se_channel.ini"
+
+    #"cfg/CROS_Experiments/goose/MaxVit/goose_4090_maxvit_segformerhead_DANet.ini"
+    #"cfg/CROS_Experiments/goose/MaxVit/goose_4090_maxvit_segformerhead_Efficientvit.ini"
+    #cfg/CROS_Experiments/goose/MaxVit/goose_4090_maxvit_segformerhead_none.ini"
+    #"cfg/CROS_Experiments/goose/MaxVit/goose_4090_maxvit_segformerhead_PVT-SRA.ini"
+    #"cfg/CROS_Experiments/goose/MaxVit/goose_4090_maxvit_segformerhead_query.ini"
+    #"cfg/CROS_Experiments/goose/MaxVit/goose_4090_maxvit_segformerhead_se_channel.ini"
+
+    #"cfg/CROS_Experiments/Segformerb2/goose_4090_segformer_segformerhead_DANet.ini" 
+    #"cfg/CROS_Experiments/Segformerb2/goose_4090_segformer_segformerhead_Efficientvit.ini" 
+    #"cfg/CROS_Experiments/Segformerb2/goose_4090_segformer_segformerhead_none.ini" 
+    #"cfg/CROS_Experiments/Segformerb2/goose_4090_segformer_segformerhead_OCR.ini" 
+    #"cfg/CROS_Experiments/Segformerb2/goose_4090_segformer_segformerhead_PVT-SRA.ini" 
+    #"cfg/CROS_Experiments/Segformerb2/goose_4090_segformer_segformerhead_query.ini" 
+    #"cfg/CROS_Experiments/Segformerb2/goose_4090_segformer_segformerhead_se_channel.ini"
  
     #"cfg/dennis/bdd100k_5090_maxxvitv2_ss.ini"
     #"cfg/dennis/bdd100k_5090_maxxvitv2_lovasz.ini"
@@ -24,6 +46,9 @@ configs=(
     #"cfg/dennis/bdd100k_1080_maxxvitv2_logcoshdice.ini"
     #"cfg/dennis/bdd100k_1080_maxxvitv2_dice.ini"   
 )
+
+
+
 
 #Backbone
 #  "cfg/goose_4090_segformerb2.ini"
@@ -152,8 +177,6 @@ configs=(
     #"cfg/IV_experiments/New_heavy_tests/goose_4090_segformerb2_segformer_h_1024_max_pool.ini"
     #"cfg/IV_experiments/New_heavy_tests/goose_4090_segformerb2_segformer_h_256_concat.ini" 
     #"cfg/IV_experiments/New_heavy_tests/goose_4090_segformerb2_segformer_h_256_max_pool.ini" 
-
-    
 
 for cfg in "${configs[@]}"; do
     echo "Running training with $cfg"

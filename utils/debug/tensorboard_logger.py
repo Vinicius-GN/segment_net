@@ -161,6 +161,7 @@ class TensorboardLogger:
         self.writer.add_scalar("val/micro_acc", float(val_micro_acc), e)
         self.writer.add_scalar("train/micro_miou", float(train_micro_miou), e)
         self.writer.add_scalar("val/micro_miou", float(val_micro_miou), e)
+        
         if train_dice is not None: self.writer.add_scalar("train/dice_epoch", float(train_dice), e)
         if val_dice   is not None: self.writer.add_scalar("val/dice_epoch",   float(val_dice),   e)
 

@@ -93,5 +93,5 @@ class DANetModule(nn.Module):
 
         fused_inter = self.alpha * fp + self.beta * fc            
         y = self.conv_fuse(fused_inter)                           
-        y = y + x                                            
+        #y = y + x                                            
         return y

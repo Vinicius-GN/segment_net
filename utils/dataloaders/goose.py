@@ -58,9 +58,6 @@ class GooseDataset(Segdataset):
             self.mapping = json.load(f)
             
         printH(f"[Goose Dataset][{self.name}]", "loaded the metadata!", "i")       
-
-        if self.set_name == "test":
-            self.set_name = "val"
             
         self.samples= []
                 

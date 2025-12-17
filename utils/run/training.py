@@ -380,6 +380,10 @@ def train_model(
         print(f"inf. time: {v_inf_time} |")
         print("")
 
+        if config.get("attention").get("use_attention"):
+            print("beta: ", model.attention.beta.item())
+            print("alpha: ", model.attention.alpha.item())
+
         print(f"{'='*40} IMAGE {'='*40}") 
         print_metric_table(train_acc, 
                            val_acc,

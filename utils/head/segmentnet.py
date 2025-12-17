@@ -27,6 +27,8 @@ from utils.attention.dual_attention import DANetModule
 from utils.attention.polarized_selfattention import ParallelPolarizedSelfAttention, SequentialPolarizedSelfAttention
 from utils.attention.efficientvit_attention import EfficientViTMSA
 from utils.attention.pvtspatialreduction_attention import PVTSpatialReductionAttention
+from utils.attention.attention_wrapper import AttentionWrapper
+
 
 class SegmentNet(nn.Module):
 
@@ -42,6 +44,8 @@ class SegmentNet(nn.Module):
         ## Encoder - Backbone
         backbone_name = self.config.get("backbone").get("type") 
         if backbone_name == "resnet18":
+            self.backbone = backbones.Resnet18(config=self.config)
+        elif backbone_name == "resnet18_fpn":
             self.backbone = backbones.Resnet18_FPN(config=self.config)
         elif backbone_name == "mobilenetv3":
             self.backbone = backbones.MobilenetV3_FPN(config=self.config)
@@ -169,6 +173,9 @@ class SegmentNet(nn.Module):
         self.use_attention = attn_cfg.get("use_attention")
 
         if self.use_attention:
+            self.attention_fn  = None
+            self.attention     = None
+
             channel_size = self.config.get("backbone").get("fpn_out_channels")
             if self.config.get("backbone").get("aggregate") == "concat":
                 channel_size = channel_size * self.backbone.num_feature_layers
@@ -178,13 +185,13 @@ class SegmentNet(nn.Module):
             num_heads = self.config.get("head").get("num_heads_transformer", 8)
 
             if attn_type == "se_channel":
-                self.attention = SEAttention(
+                self.attention_fn = SEAttention(
                     channel_size,
                     reduction=rr
                 )
 
             elif attn_type == "spatial":
-                self.attention = ClassSpatialAttention(
+                self.attention_fn = ClassSpatialAttention(
                     channel_size,
                     num_classes=self.config.get("image").get("num_classes"),
                     dropout=dr
@@ -192,7 +199,7 @@ class SegmentNet(nn.Module):
 
             elif attn_type == "query":
                 embed_dim = max(16, channel_size // max(1, rr))
-                self.attention = ClassQueryAttention(
+                self.attention_fn = ClassQueryAttention(
                     channel_size,
                     embed_dim=embed_dim,
                     num_classes=self.config.get("image").get("num_classes"),
@@ -201,7 +208,7 @@ class SegmentNet(nn.Module):
                 )
 
             elif attn_type == "class_channel":
-                self.attention = ClassChannelAttention(
+                self.attention_fn = ClassChannelAttention(
                     channel_size,
                     num_classes=self.config.get("image").get("num_classes"),
                     dropout=dr
@@ -209,7 +216,7 @@ class SegmentNet(nn.Module):
 
             elif attn_type == "ocr":
                 key_dim = max(32, channel_size // max(1, rr))
-                self.attention = OCRAttention(
+                self.attention_fn = OCRAttention(
                     in_channels=channel_size,
                     num_classes=self.config.get("image").get("num_classes"),
                     key_channels=key_dim,
@@ -219,21 +226,21 @@ class SegmentNet(nn.Module):
                 )
 
             elif attn_type == "danet":
-                self.attention = DANetModule(
+                self.attention_fn = DANetModule(
                     in_channels=channel_size,
                     reduction=self.config["attention"].get("reduction_rate", 4),
                     dropout=self.config["attention"].get("dropout", 0.0),
                 )
 
             elif attn_type == "psa_parallel":
-                self.attention = ParallelPolarizedSelfAttention(
+                self.attention_fn = ParallelPolarizedSelfAttention(
                     channel=channel_size,
                     reduction=max(1, rr)
                 )
 
             elif attn_type == "psa_sequential":
                 order = attn_cfg.get("psa_order", "cs")
-                self.attention = SequentialPolarizedSelfAttention(
+                self.attention_fn = SequentialPolarizedSelfAttention(
                     channel=channel_size,
                     reduction=max(1, rr),
                     order=order
@@ -242,7 +249,7 @@ class SegmentNet(nn.Module):
             elif attn_type == "efficientvit":
                 head_dim = attn_cfg.get("head_dim", max(16, channel_size // max(1, rr)))
                 ksizes = tuple(attn_cfg.get("head_kernel_sizes", (3, 5)))
-                self.attention = EfficientViTMSA(
+                self.attention_fn = EfficientViTMSA(
                     channels=channel_size,
                     head_dim=head_dim,
                     head_kernel_sizes=ksizes
@@ -250,7 +257,7 @@ class SegmentNet(nn.Module):
 
             elif attn_type == "pvt_sra":
                 sr_ratio = attn_cfg.get("sr_ratio", 2)
-                self.attention = PVTSpatialReductionAttention(
+                self.attention_fn = PVTSpatialReductionAttention(
                     channels=channel_size,
                     embed_dim=channel_size,
                     num_heads=num_heads,
@@ -262,7 +269,7 @@ class SegmentNet(nn.Module):
 
             elif attn_type == "pvt_linear":
                 pool_size = attn_cfg.get("pool_size", 7)
-                self.attention = PVTSpatialReductionAttention(
+                self.attention_fn = PVTSpatialReductionAttention(
                     channels=channel_size,
                     embed_dim=channel_size,
                     num_heads=num_heads,
@@ -271,23 +278,37 @@ class SegmentNet(nn.Module):
                     attn_drop=dr,
                     proj_drop=dr
                 )
-
             else:
                 raise ValueError(f"Attention type invalid! {attn_type}")
+            
+
+            if self.attention_fn is not None:
+                self.attention = AttentionWrapper(
+                    attn_fn=self.attention_fn,
+                    channels=channel_size
+                )   
 
             
         
     def forward(self, x):
-        
-        x = self.backbone(x)     
-        
-        # attention
-        if self.use_attention:
-            x = x + self.attention(x)
-            
-        x = self.head(x)       
+        """
+        Args:
+            x: input_tensor [B, 3, H, W]
+            return_att: if True, return the attention map [B, 1, H_att, W_att] with the logits
+        Returns:
+            - if return_att == False: logits [B, C, H, W]
+            - if return_att == True: (logits, att_map)
+        """
+         
+        x = self.backbone(x)    
+
+        if self.use_attention and self.attention is not None:
+           x = self.attention(x)
+
+        x = self.head(x)
 
         return x
+
     
     def predict(self, 
                 x:torch.Tensor, 

@@ -72,7 +72,14 @@ class SegmentLoss(torch.nn.Module):
                                   gamma=gamma, 
                                   reduction=reduction, 
                                   weights=weights)
+
+        elif self.config.get("loss").get("type") == "focalCE_dice":
             
+            self.loss = FocalCE_dice(w_dice=0.7, w_focal=0.3, alpha=alpha, 
+                                  gamma=gamma, 
+                                  reduction=reduction, 
+                                  weights=weights)
+        
         elif self.config.get("loss").get("type") == "lovasz_softmax":
             
             self.loss = LovaszSoftmax()
@@ -206,7 +213,32 @@ class FocalDice(torch.nn.Module):
             return focal_loss.sum()
         else:
             return focal_loss
-        
+
+class FocalCE_dice(torch.nn.Module):
+    def __init__(self, w_dice, w_focal, alpha=1.0, gamma=2.0, reduction='mean', weights=None):
+        super(FocalCE_dice, self).__init__()
+        self.alpha = alpha
+        self.gamma = gamma
+        self.reduction = reduction
+        self.weights = weights
+        self.w_dice = w_dice
+        self.w_focal = w_focal
+
+        self.dice = DiceLoss(use_sigmoid=False, reduction="none")
+
+    def forward(self, logits, targets):
+        ce_loss = F.cross_entropy(logits, targets, reduction='none', label_smoothing=0.1, weight=self.weights)
+        pt = torch.exp(-ce_loss) 
+        focal_loss = self.alpha * (1 - pt) ** self.gamma * ce_loss
+
+        batch_size = targets.shape[0]
+        class_weights = self.weights.unsqueeze(0).expand(batch_size, -1)
+        dice_loss = self.dice(logits, targets, weight=class_weights)
+
+        if self.reduction == 'mean':
+            return focal_loss.mean()*self.w_focal + dice_loss.mean()*self.w_dice
+        else:
+            return focal_loss.sum()*self.w_focal + dice_loss.sum()*self.w_dice
         
 class LovaszSoftmax(torch.nn.Module):
     def __init__(self):
